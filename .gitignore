@@ -6,3 +6,6 @@ _build_mpu/*
 
 /_can_dbc/*.h
 /_build_with_dbc/
+
+!.gitignore
+.*
