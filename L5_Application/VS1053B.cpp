@@ -7,19 +7,21 @@
 
 #include <VS1053B.h>
 
+VS1053B* VS1053B::instance = 0;
+
 void VS1053B::init_VS1053B()
 {
     //Init SPI0
     ssp0_init(12);
     ssp0_set_max_clock(12);
     //Init DREQ GPIO (P0.01)
-    DREQ = GPIO(P0_1);
+    //DREQ = GPIO(P0_1);
     DREQ.setAsInput();
     //Init CS GPIO (P0.29)
-    CS = GPIO(P0_29);
+    //CS = GPIO(P0_29);
     CS.setAsOutput();
     //Init DCS GPIO (P0.00)
-    DCS = GPIO(P0_0);
+    //DCS = GPIO(P0_0);
     DCS.setAsOutput();
 }
 
@@ -65,10 +67,17 @@ int VS1053B::WriteSdi(const uint8_t* data, uint8_t bytes)
     spi0_unlock();
     return 0;
 }
-
-VS1053B::VS1053B()
+VS1053B* VS1053B::getInstance()
 {
+    if (instance == 0)
+    {
+        instance = new VS1053B();
+    }
+
+    return instance;
 }
+
+VS1053B::VS1053B(){}
 
 VS1053B::~VS1053B()
 {
