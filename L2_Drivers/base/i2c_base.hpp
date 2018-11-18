@@ -91,6 +91,19 @@ class I2C_Base
          */
         bool writeReg(uint8_t deviceAddress, uint8_t registerAddress, uint8_t value);
 
+        /**
+         * Writes a single byte to a nonregister based I2C Slave
+         * @param deviceAddress     The I2C Device Address
+         * @param value             The value to write to registerAddress
+         * @return true if successful
+         */
+        bool write(uint8_t deviceAddress, uint8_t value);
+
+        /**
+         * repeat write for nonregister based device
+         */
+        bool write_str(uint8_t deviceAddress, uint8_t* str, uint32_t length);
+
         /// @copydoc transfer()
         bool readRegisters(uint8_t deviceAddress, uint8_t firstReg, uint8_t* pData, uint32_t transferSize);
 

@@ -22,7 +22,6 @@
 #include "lpc_sys.h"
 
 
-
 /**
  * Instead of using a dedicated variable for read vs. write, we just use the LSB of
  * the user address to indicate read or write mode.
@@ -61,6 +60,17 @@ bool I2C_Base::readRegisters(uint8_t deviceAddress, uint8_t firstReg, uint8_t* p
 bool I2C_Base::writeReg(uint8_t deviceAddress, uint8_t registerAddress, uint8_t value)
 {
     return writeRegisters(deviceAddress, registerAddress, &value, 1);
+}
+
+bool I2C_Base::write(uint8_t deviceAddress, uint8_t value)
+{
+    I2C_SET_WRITE_MODE(deviceAddress);
+    return transfer(deviceAddress, 0, &value, 1);
+}
+
+bool I2C_Base::write_str(uint8_t deviceAddress, uint8_t* str, uint32_t length){
+    I2C_SET_WRITE_MODE(deviceAddress);
+    return transfer(deviceAddress, 0, str, length);
 }
 
 bool I2C_Base::writeRegisters(uint8_t deviceAddress, uint8_t firstReg, uint8_t* pData, uint32_t bytesToWrite)
@@ -285,11 +295,16 @@ I2C_Base::mStateMachineStatus_t I2C_Base::i2cStateMachine()
         case slaveAddressAcked:
             clearSTARTFlag();
             // No data to transfer, this is used just to test if the slave responds
-            if(0 == mTransaction.trxSize) {
+            if(0 == mTransaction.trxSize && 0==*mTransaction.pMasterData) {
                 setStop();
             }
-            else {
+            else if(0!=mTransaction.firstReg){
                 mpI2CRegs->I2DAT = mTransaction.firstReg;
+                clearSIFlag();
+            }else{
+                mpI2CRegs->I2DAT = *(mTransaction.pMasterData);
+                ++mTransaction.pMasterData;
+                --mTransaction.trxSize;
                 clearSIFlag();
             }
             break;

@@ -56,6 +56,16 @@ protected:
         mI2C.writeReg(mOurAddr, reg, data);
     }
 
+    /// Writes to nonregister driven device
+    inline bool write(unsigned char data)
+    {
+        return mI2C.write(mOurAddr, data);
+    }
+
+    inline bool write_str(unsigned char* str, uint32_t length){
+        return mI2C.write_str(mOurAddr, str, length);
+    }
+
     /// @returns true if the device responds to its address
     inline bool checkDeviceResponse()
     {
