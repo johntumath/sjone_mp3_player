@@ -1,3 +1,4 @@
+
 #ifndef MP3_TASKS_H
 #define MP3_TASKS_H
 
@@ -10,11 +11,13 @@
 
 class VS1053{
 private:
-   char *songs[100]; //array of song titles
-   int song_index;
-   int number_of_songs = 0;
+   char *songs[100];             //array of song titles
+   int current_song_index;       //Initialize it at 0 with init function 
+   int number_of_songs;          //Counting number of songs
 public:
-   void getSongs();
+   VS1053();
+   void getSongs();              //Grabs songs from lfname and writes into char *songs[100]
+   char *getCurrentSong();       //Returns the current song that's being played
 };
 
 #endif

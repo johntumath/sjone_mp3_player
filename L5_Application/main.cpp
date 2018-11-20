@@ -20,6 +20,7 @@ int main(void)
     //const uint32_t STACK_SIZE = 1024;
 
     mp3.getSongs();
+    mp3.getCurrentSong();
     // xTaskCreate(xMp3Reader, "Read from SD Card", STACK_SIZE, (void*)1, 1, NULL);
     // xTaskCreate(xMp3Writer, "Write to MP3 Decoder", STACK_SIZE, (void*)1, 1, NULL);
 
