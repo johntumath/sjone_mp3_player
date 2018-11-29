@@ -114,56 +114,56 @@ void VS1053::setVolume(uint8_t left, uint8_t right) {
   sciWrite(SCI_VOL, volume);
 }
 
-bool VS1053::startPlayMP3File(const char *track)
-{
-//This function is still laggy, need to improve it.
-    soft_reset();
-    // reset playback
-    sciWrite(SCI_MODE, SM_LINE1 | SM_SDINEW);
-    // resync
-    sciWrite(SCI_WRAMADDR, 0x1e29);
-    sciWrite(SCI_WRAM, 0);
-    setVolume(40,40);
-    //Open file
-    f_open(&currentTrack, track, FA_READ);
-    if (&currentTrack == 0)
-    {
-        return false;
-    }
-    sciWrite(SCI_DECODE_TIME, 0x00);
-    sciWrite(SCI_DECODE_TIME, 0x00);
-    playingMusic = true;
-    UINT br;
-    //
-    SPI0.setdivider(4);
-    while (DREQ->read()==0);
-    while (playingMusic)
-    {
-      //printf("Inside loop 1\n");
-      f_read(&currentTrack, musicBuffer, 512, &br);
-      while (DREQ->read()==0);
-      if(br == 0) //No more bytes read in the file, we're done.
-      {
-          playingMusic = false;
-          f_close(&currentTrack);
-          break;
-      }
-      u_int8 *bufP = musicBuffer;
-      _DCS->setLow();
-      while(br)
-      {
-          while (DREQ->read()==0);
-
-          int t = min(32, br);
-          spiwrite(bufP, t);
-          bufP += t;
-          br -= t;
-
-      }
-      _DCS->setHigh();
-    }
-    SPI0.setdivider(14);
-}
+//bool VS1053::startPlayMP3File(const char *track)
+//{
+////This function is still laggy, need to improve it.
+//    soft_reset();
+//    // reset playback
+//    sciWrite(SCI_MODE, SM_LINE1 | SM_SDINEW);
+//    // resync
+//    sciWrite(SCI_WRAMADDR, 0x1e29);
+//    sciWrite(SCI_WRAM, 0);
+//    setVolume(40,40);
+//    //Open file
+//    f_open(&currentTrack, track, FA_READ);
+//    if (&currentTrack == 0)
+//    {
+//        return false;
+//    }
+//    sciWrite(SCI_DECODE_TIME, 0x00);
+//    sciWrite(SCI_DECODE_TIME, 0x00);
+//    playingMusic = true;
+//    UINT br;
+//    //
+//    SPI0.setdivider(4);
+//    while (DREQ->read()==0);
+//    while (playingMusic)
+//    {
+//      //printf("Inside loop 1\n");
+//      f_read(&currentTrack, musicBuffer, 512, &br);
+//      while (DREQ->read()==0);
+//      if(br == 0) //No more bytes read in the file, we're done.
+//      {
+//          playingMusic = false;
+//          f_close(&currentTrack);
+//          break;
+//      }
+//      u_int8 *bufP = musicBuffer;
+//      _DCS->setLow();
+//      while(br)
+//      {
+//          while (DREQ->read()==0);
+//
+//          int t = min(32, br);
+//          spiwrite(bufP, t);
+//          bufP += t;
+//          br -= t;
+//
+//      }
+//      _DCS->setHigh();
+//    }
+//    SPI0.setdivider(14);
+//}
 
 VS1053::VS1053(){}
 

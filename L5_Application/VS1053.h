@@ -29,10 +29,9 @@ public:
     void sineTest(uint8_t n, uint16_t ms);
     void soft_reset(void);
     void setVolume(uint8_t left, uint8_t right);
-    bool startPlayMP3File(const char *track);
+    //bool startPlayMP3File(const char *track);
     virtual ~VS1053();
     VS1053();
-private:
     GPIO* DREQ;
     GPIO* _CS;
     GPIO* _DCS;
