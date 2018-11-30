@@ -9,11 +9,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include "storage.hpp"
+#include "semphr.h"
 
 VS1053 MP3;
-const char* mp3FileName = "1:TRACK64.mp3";
+char mp3FileName[32] = "1:TRACK320.mp3";
 QueueHandle_t mp3Bytes;
 bool playingMusic = false;
+SemaphoreHandle_t semplaysong;
 
 CMD_HANDLER_FUNC(volumeHandler){
     uint8_t vol= atoi(cmdParams.c_str());
@@ -27,9 +29,10 @@ CMD_HANDLER_FUNC(pauseHandler){
 }
 
 CMD_HANDLER_FUNC(playHandler){
-    char* filename = strcat("1:", cmdParams.c_str());
-    mp3FileName = filename;
-    playingMusic = true;
+    char filename[32] = "1:";
+    strcat(filename, cmdParams.c_str());
+    strcpy(mp3FileName,filename);
+    xSemaphoreGive(semplaysong);
     return true;
 }
 
@@ -42,6 +45,7 @@ void Reader(void* pvParameters)
     while (1)
     {
         //Wait for signal to open file
+        //while(xSemaphoreTake(semplaysong, portMAX_DELAY)!= pdTRUE);
         //Open track for reading
         FRESULT res = f_open(&mp3File, mp3FileName, FA_READ);
         if (res != 0)
@@ -69,16 +73,6 @@ void Reader(void* pvParameters)
     }
 }
 
-void PlayerStart()
-{
-        MP3.soft_reset();
-        // reset playback
-        MP3.sciWrite(SCI_MODE, SM_LINE1 | SM_SDINEW);
-        // resync
-        MP3.sciWrite(SCI_WRAMADDR, 0x1e29);
-        MP3.sciWrite(SCI_WRAM, 0);
-}
-
 void Player(void * pvParameters)
 {
     unsigned char playerBuffer[512];
@@ -87,7 +81,14 @@ void Player(void * pvParameters)
     while(1)
     {
         //Wait for signal to begin playing.
-        PlayerStart();
+
+        MP3.soft_reset();
+        // reset playback
+        MP3.sciWrite(SCI_MODE, SM_LINE1 | SM_SDINEW);
+        // resync
+        MP3.sciWrite(SCI_CLOCKF,0x6000);
+        MP3.sciWrite(SCI_WRAMADDR, 0x1e29);
+        MP3.sciWrite(SCI_WRAM, 0);
         MP3.sciWrite(SCI_DECODE_TIME, 0x00);
         MP3.sciWrite(SCI_DECODE_TIME, 0x00);
         playingMusic = true;
@@ -97,9 +98,10 @@ void Player(void * pvParameters)
             //Read off queue
             xQueueReceive(mp3Bytes, &playerBuffer, portMAX_DELAY);
             bufP = playerBuffer;
-            //Begin playing the block recieved
+            //Begin playing the block received
             while (MP3.DREQ->read()==0);
             MP3._DCS->setLow();
+            MP3.SPI0.setdivider(4);
             for (int i = 0; i < 512; i = i+32)
             {
                 while (MP3.DREQ->read()==0);
@@ -113,11 +115,11 @@ void Player(void * pvParameters)
 
 int main(void)
 {
+    semplaysong = xSemaphoreCreateBinary();
     MP3.init(P1_28, P1_29, P1_23);
     mp3Bytes = xQueueCreate(16, 512);
-    const uint32_t STACK_SIZE_WORDS = 1024;
-    xTaskCreate(Reader, "Reader", STACK_SIZE_WORDS, NULL, 2, NULL);
-    xTaskCreate(Player, "Player", STACK_SIZE_WORDS, NULL, 1, NULL);
+    xTaskCreate(Reader, "Reader", 512, NULL, 2, NULL);
+    xTaskCreate(Player, "Player", 512, NULL, 1, NULL);
     scheduler_add_task(new terminalTask(PRIORITY_HIGH));
     scheduler_start();
     return -1;
