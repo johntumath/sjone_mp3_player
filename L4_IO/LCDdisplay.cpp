@@ -32,7 +32,7 @@ bool LCD_display::write_str(char* str, uint32_t length)
     /*
      * This function should work to send repeat starts to the i2c, but currently  doesn't work
      *///return write_str(str, length);
-    for(int i=0; i<length; ++i)write_char(str[i]);
+    for(int i=0; i<length; ++i) write_char(str[i]);
 }
 
 int LCD_display::position_cursor()
