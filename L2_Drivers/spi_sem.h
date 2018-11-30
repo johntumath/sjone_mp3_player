@@ -30,6 +30,8 @@ extern "C" {
  */
 void spi1_lock(void);    ///< Lock SPI access
 void spi1_unlock(void);  ///< Unlock SPI access
+void spi0_lock(void);    ///< Lock SPI access
+void spi0_unlock(void);  ///< Unlock SPI access
 /** @} */
 
 
