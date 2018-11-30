@@ -14,24 +14,33 @@
 VS1053 MP3;
 char mp3FileName[32] = "1:TRACK320.mp3";
 QueueHandle_t mp3Bytes;
-bool playingMusic = false;
 SemaphoreHandle_t semplaysong;
+volatile enum {playing, requeststop, stoptransmitting, playerstopped} player_state;
 
-CMD_HANDLER_FUNC(volumeHandler){
+
+CMD_HANDLER_FUNC(volumeHandler)
+{
     uint8_t vol= atoi(cmdParams.c_str());
     MP3.setVolume(vol,vol);
     printf("Volume set to %d\n", vol );
     return true;
 }
 
-CMD_HANDLER_FUNC(pauseHandler){
+CMD_HANDLER_FUNC(pauseHandler)
+{
     return true;
 }
 
-CMD_HANDLER_FUNC(playHandler){
+CMD_HANDLER_FUNC(playHandler)
+{
     char filename[32] = "1:";
     strcat(filename, cmdParams.c_str());
     strcpy(mp3FileName,filename);
+    if (player_state != playerstopped)
+    {
+        player_state = requeststop;
+        while (player_state != playerstopped);
+    }
     xSemaphoreGive(semplaysong);
     return true;
 }
@@ -43,11 +52,8 @@ void Reader(void* pvParameters)
     uint br; // Counts the number of bytes read during a read operation.
     while (1)
     {
-        vTaskDelay(500);
         //Wait for signal to open file
-        playingMusic = false;
         while(xSemaphoreTake(semplaysong, portMAX_DELAY)!= pdTRUE);
-        playingMusic = true;
         //Open track for reading
         FRESULT res = f_open(&mp3File, mp3FileName, FA_READ);
         if (res != 0)
@@ -82,9 +88,6 @@ void Player(void * pvParameters)
 
     while(1)
     {
-        vTaskDelay(500);
-        //Wait for signal to begin playing.
-
         MP3.soft_reset();
         // reset playback
         MP3.sciWrite(SCI_MODE, SM_LINE1 | SM_SDINEW);
@@ -94,9 +97,9 @@ void Player(void * pvParameters)
         MP3.sciWrite(SCI_WRAM, 0);
         MP3.sciWrite(SCI_DECODE_TIME, 0x00);
         MP3.sciWrite(SCI_DECODE_TIME, 0x00);
-        playingMusic = true;
+        player_state = playing;
         while (MP3.DREQ->read()==0);
-        while (playingMusic)
+        while (player_state != playerstopped)
         {
             //Read off queue
             xQueueReceive(mp3Bytes, &playerBuffer, portMAX_DELAY);
@@ -112,7 +115,22 @@ void Player(void * pvParameters)
                 bufP += 32;
             }
             MP3._DCS->setHigh();
+            if (player_state == requeststop)
+            {
+                uint16_t temp = MP3.sciRead(SCI_MODE);
+                MP3.sciWrite(SCI_MODE, temp | SM_CANCEL);
+                player_state = stoptransmitting;
+            }
+            if (player_state == stoptransmitting)
+            {
+                uint16_t temp = MP3.sciRead(SCI_MODE);
+                if (!(temp & SM_CANCEL))
+                {
+                    player_state = playerstopped;
+                }
+            }
         }
+
     }
 }
 
@@ -120,6 +138,7 @@ int main(void)
 {
     scheduler_add_task(new terminalTask(PRIORITY_HIGH));
     semplaysong = xSemaphoreCreateBinary();
+    player_state = playerstopped;
     MP3.init(P1_28, P1_29, P1_23);
     mp3Bytes = xQueueCreate(2, 512);
     xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 2, NULL);
