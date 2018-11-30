@@ -31,8 +31,6 @@ public:
     void soft_reset(void);
     void setVolume(uint8_t left, uint8_t right);
     bool startPlayMP3File(const char *track);
-    void getSongs();
-    char *getCurrentSong();
     //bool startPlayMP3File(const char *track);
     virtual ~VS1053();
     VS1053();
@@ -43,9 +41,6 @@ public:
     FIL currentTrack;
     bool playingMusic;
     uint8_t musicBuffer[512];
-    char *songs[100];
-    int current_song_index;
-    int number_of_songs;
 };
 
 #endif /* VS1053_H_ */
