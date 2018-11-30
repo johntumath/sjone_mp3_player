@@ -33,10 +33,9 @@ public:
     bool startPlayMP3File(const char *track);
     void getSongs();
     char *getCurrentSong();
-    void getMetaData();
+    //bool startPlayMP3File(const char *track);
     virtual ~VS1053();
     VS1053();
-private:
     GPIO* DREQ;
     GPIO* _CS;
     GPIO* _DCS;
