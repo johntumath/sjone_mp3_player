@@ -36,7 +36,6 @@ CMD_HANDLER_FUNC(playHandler){
     return true;
 }
 
-
 void Reader(void* pvParameters)
 {
     FIL mp3File; //File descriptor for the file being read.
@@ -44,8 +43,11 @@ void Reader(void* pvParameters)
     uint br; // Counts the number of bytes read during a read operation.
     while (1)
     {
+        vTaskDelay(500);
         //Wait for signal to open file
-        //while(xSemaphoreTake(semplaysong, portMAX_DELAY)!= pdTRUE);
+        playingMusic = false;
+        while(xSemaphoreTake(semplaysong, portMAX_DELAY)!= pdTRUE);
+        playingMusic = true;
         //Open track for reading
         FRESULT res = f_open(&mp3File, mp3FileName, FA_READ);
         if (res != 0)
@@ -80,6 +82,7 @@ void Player(void * pvParameters)
 
     while(1)
     {
+        vTaskDelay(500);
         //Wait for signal to begin playing.
 
         MP3.soft_reset();
@@ -115,12 +118,12 @@ void Player(void * pvParameters)
 
 int main(void)
 {
+    scheduler_add_task(new terminalTask(PRIORITY_HIGH));
     semplaysong = xSemaphoreCreateBinary();
     MP3.init(P1_28, P1_29, P1_23);
-    mp3Bytes = xQueueCreate(16, 512);
-    xTaskCreate(Reader, "Reader", 512, NULL, 2, NULL);
-    xTaskCreate(Player, "Player", 512, NULL, 1, NULL);
-    scheduler_add_task(new terminalTask(PRIORITY_HIGH));
+    mp3Bytes = xQueueCreate(2, 512);
+    xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 2, NULL);
+    xTaskCreate(Player, "Player", STACK_BYTES(1048), NULL, 2, NULL);
     scheduler_start();
     return -1;
 }
