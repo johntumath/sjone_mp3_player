@@ -13,24 +13,24 @@ bool LCD_display::init()
     return checkDeviceResponse();
 }
 
-bool LCD_display::send_short_setting(uint8_t setting)
+void LCD_display::send_short_setting(uint8_t setting)
 {
-    return writeReg(SETTING_MODE, setting);
+    writeReg(SETTING_MODE, setting);
 }
 
-bool LCD_display::send_long_setting(uint8_t setting, uint8_t* options, uint8_t opt_length)
+void LCD_display::send_long_setting(uint8_t setting, uint8_t* options, uint8_t opt_length)
 {
     unsigned char * setting_opt = new unsigned char [opt_length + 1];
     setting_opt[0] = (unsigned char) setting;
     for(int i=1; i < (opt_length + 1); ++i){
         setting_opt[i] = (unsigned char) options[i-1];
     }
-    return writeRegs((unsigned char)SETTING_MODE, setting_opt, opt_length);
+    writeRegs((unsigned char)SETTING_MODE, setting_opt, opt_length);
 }
 
-bool LCD_display::send_command(uint8_t command)
+void LCD_display::send_command(uint8_t command)
 {
-    return writeReg(COMMAND_MODE, command);
+    writeReg(COMMAND_MODE, command);
 }
 
 bool LCD_display::write_char(char c)

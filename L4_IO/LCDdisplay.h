@@ -126,9 +126,9 @@ public:
     void reset_screen();
     int position_cursor(uint8_t row, uint8_t column);
 private:
-    bool send_short_setting(uint8_t setting);
-    bool send_long_setting(uint8_t setting, uint8_t* options, uint8_t opt_length);
-    bool send_command(uint8_t command);
+    void send_short_setting(uint8_t setting);
+    void send_long_setting(uint8_t setting, uint8_t* options, uint8_t opt_length);
+    void send_command(uint8_t command);
 };
 
 #endif /* LCDDISPLAY_H_ */
