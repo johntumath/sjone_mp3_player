@@ -60,7 +60,6 @@ void Reader(void* pvParameters)
           printf("Error opening file in reader task.");
           return;
         }
-
         f_read(&mp3File, musicBlock, 512, &br);
         do{
             if(br == 0) //Empty file, break.
@@ -124,8 +123,6 @@ void Player(void * pvParameters)
 
 int main(void)
 {
-    MP3.getSongs();
-    //MP3.getCurrentSong();
     scheduler_add_task(new terminalTask(PRIORITY_HIGH));
     semplaysong = xSemaphoreCreateBinary();
     MP3.init(P1_28, P1_29, P1_23);
