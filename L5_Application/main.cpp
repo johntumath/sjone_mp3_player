@@ -11,14 +11,32 @@
 #include "storage.hpp"
 #include "semphr.h"
 #include "uart0_min.h"
+#include "LabGPIOInterrupt.h"
 
 VS1053 MP3;
 char mp3FileName[32];
-volatile bool paused;
+LabGpioInterrupts interrupt;
+volatile bool paused, dreq_high;
 QueueHandle_t mp3Bytes;
-SemaphoreHandle_t sem_start_reader, sem_start_player;
+volatile SemaphoreHandle_t sem_start_reader, sem_start_player, sem_dreq_high;
+
 volatile enum {playing, requeststop, stoptransmitting, playerstopped} player_state;
 
+void Eint3Handler(void)
+{
+    interrupt.HandleInterrupt();
+}
+
+void DReqISR(void)
+{
+    long yield = 0;
+    if (MP3.DREQ->read() == 1)
+    {
+        //uart0_puts("Inside ISR\n");
+        xSemaphoreGiveFromISR(sem_dreq_high, &yield);
+    }
+    portYIELD_FROM_ISR(yield);
+}
 
 CMD_HANDLER_FUNC(volumeHandler)
 {
@@ -127,7 +145,10 @@ void Player(void * pvParameters)
     while(1)
     {
         while(xSemaphoreTake(sem_start_player, portMAX_DELAY)!= pdTRUE);
-        while (MP3.DREQ->read()==0);
+        while(MP3.DREQ->read()==0)
+        {
+            vTaskDelay(2);
+        }
         MP3.soft_reset();
         MP3.soft_reset();
         // reset playback
@@ -145,23 +166,35 @@ void Player(void * pvParameters)
             xQueueReceive(mp3Bytes, &playerBuffer, portMAX_DELAY);
             bufP = playerBuffer;
             //Begin playing the block received
-            while (MP3.DREQ->read()==0);
+            while(MP3.DREQ->read()==0)
+            {
+                vTaskDelay(2);
+            }
             MP3._DCS->setLow();
             for (int i = 0; i < 512; i = i+32)
             {
-                while (MP3.DREQ->read()==0);
+                while(MP3.DREQ->read()==0)
+                {
+                    vTaskDelay(2);
+                }
                 MP3.spiwrite(bufP, 32);
                 bufP += 32;
             }
             if (player_state == requeststop)
             {
-                while (MP3.DREQ->read()==0);
+                while(MP3.DREQ->read()==0)
+                {
+                    vTaskDelay(2);
+                }
                 MP3.sciWrite(SCI_MODE, SM_LINE1 | SM_SDINEW | SM_CANCEL);
                 player_state = stoptransmitting;
             }
             else if (player_state == stoptransmitting)
             {
-                while (MP3.DREQ->read()==0);
+                while(MP3.DREQ->read()==0)
+                {
+                    vTaskDelay(2);
+                }
                     player_state = playerstopped;
             }
             MP3._DCS->setHigh();
@@ -172,11 +205,16 @@ void Player(void * pvParameters)
 int main(void)
 {
     scheduler_add_task(new terminalTask(PRIORITY_HIGH));
+    MP3.init(P2_7, P1_29, P1_23);
     sem_start_reader = xSemaphoreCreateBinary();
     sem_start_player = xSemaphoreCreateBinary();
+    sem_dreq_high = xSemaphoreCreateBinary();
+    interrupt.Initialize();
+    interrupt.AttachInterruptHandler(2,7,DReqISR,InterruptCondition::kRisingEdge);
+    isr_register(EINT3_IRQn, Eint3Handler);
     player_state = playerstopped;
     paused = false;
-    MP3.init(P1_28, P1_29, P1_23);
+    xSemaphoreGive(sem_dreq_high);
     mp3Bytes = xQueueCreate(2, 512);
     xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 1, NULL);
     xTaskCreate(Player, "Player", STACK_BYTES(1048), NULL, 2, NULL);
