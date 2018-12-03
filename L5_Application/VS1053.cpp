@@ -21,7 +21,6 @@ void VS1053::init(LPC1758_GPIO_Type pinDREQ, LPC1758_GPIO_Type pin_CS, LPC1758_G
      _DCS->setHigh();
      //SPI0.initialize(8, LabSpi0::SPI, 17);
      SPI0.initialize(8, LabSpi0::SPI, 14);
-     playingMusic = false;
 }
 
 uint8_t VS1053::spiread(void)
