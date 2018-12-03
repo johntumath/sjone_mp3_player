@@ -10,6 +10,7 @@
 #include <string.h>
 #include "storage.hpp"
 #include "semphr.h"
+#include "uart0_min.h"
 
 VS1053 MP3;
 char mp3FileName[32] = "1:TRACK320.mp3";
@@ -41,6 +42,7 @@ CMD_HANDLER_FUNC(playHandler)
         player_state = requeststop;
         while (player_state != playerstopped);
     }
+    player_state = playing;
     xSemaphoreGive(semplaysong);
     return true;
 }
@@ -58,8 +60,30 @@ void Reader(void* pvParameters)
         FRESULT res = f_open(&mp3File, mp3FileName, FA_READ);
         if (res != 0)
         {
-            printf("Error opening file in reader task.");
-            return;
+        	switch(res)
+        	{
+				case 1: uart0_puts("Read Error: FR_DISK_ERR"); break;
+				case 2: uart0_puts("Read Error: FR_INT_ERR"); break;
+				case 3: uart0_puts("Read Error: FR_NOT_READY"); break;
+				case 4: uart0_puts("Read Error: FR_NO_FILE"); break;
+				case 5: uart0_puts("Read Error: FR_NO_PATH"); break;
+				case 6: uart0_puts("Read Error: FR_INVALID_NAME"); break;
+				case 7: uart0_puts("Read Error: FR_DENIED"); break;
+				case 8: uart0_puts("Read Error: FR_EXIST"); break;
+				case 9: uart0_puts("Read Error: FR_INVALID_OBJECT"); break;
+				case 10: uart0_puts("Read Error: FR_WRITE_PROTECTED"); break;
+				case 11: uart0_puts("Read Error: FR_INVALID_DRIVE"); break;
+				case 12: uart0_puts("Read Error: FR_NOT_ENABLED"); break;
+				case 13: uart0_puts("Read Error: FR_NO_FILESYSTEM"); break;
+				case 14: uart0_puts("Read Error: FR_MKFS_ABORTED"); break;
+				case 15: uart0_puts("Read Error: FR_TIMEOUT"); break;
+				case 16: uart0_puts("Read Error: FR_LOCKED"); break;
+				case 17: uart0_puts("Read Error: FR_NOT_ENOUGH_CORE"); break;
+				case 18: uart0_puts("Read Error: FR_TOO_MANY_OPEN_FILES"); break;
+				case 19: uart0_puts("Read Error: FR_INVALID_PARAMETER"); break;
+				default : uart0_puts("Read Error: Unknown"); break;
+				return;
+            }
         }
         f_read(&mp3File, musicBlock, 512, &br);
         do{
@@ -97,7 +121,6 @@ void Player(void * pvParameters)
         MP3.sciWrite(SCI_WRAM, 0);
         MP3.sciWrite(SCI_DECODE_TIME, 0x00);
         MP3.sciWrite(SCI_DECODE_TIME, 0x00);
-        player_state = playing;
         while (MP3.DREQ->read()==0);
         while (player_state != playerstopped)
         {
@@ -141,7 +164,7 @@ int main(void)
     player_state = playerstopped;
     MP3.init(P1_28, P1_29, P1_23);
     mp3Bytes = xQueueCreate(2, 512);
-    xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 2, NULL);
+    xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 1, NULL);
     xTaskCreate(Player, "Player", STACK_BYTES(1048), NULL, 2, NULL);
     scheduler_start();
     return -1;
