@@ -32,6 +32,7 @@ CMD_HANDLER_FUNC(playHandler){
     char filename[32] = "1:";
     strcat(filename, cmdParams.c_str());
     strcpy(mp3FileName,filename);
+    // printf("\nfile name: %s\n", mp3FileName);
     xSemaphoreGive(semplaysong);
     return true;
 }
@@ -48,12 +49,16 @@ void Reader(void* pvParameters)
         playingMusic = false;
         while(xSemaphoreTake(semplaysong, portMAX_DELAY)!= pdTRUE);
         playingMusic = true;
+        bool isMP3File = (strstr(mp3FileName, ".mp3") == NULL &&
+        strstr(mp3FileName, ".MP3") == NULL);
+        bool isTxtFile = strstr(mp3FileName, ".txt") == NULL;
+
         //Open track for reading
         FRESULT res = f_open(&mp3File, mp3FileName, FA_READ);
-        if (res != 0)
+        if (res != 0 || (isMP3File && isTxtFile))
         {
-            printf("Error opening file in reader task.");
-            return;
+          printf("Error opening file in reader task.");
+          return;
         }
         f_read(&mp3File, musicBlock, 512, &br);
         do{
