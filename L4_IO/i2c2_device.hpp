@@ -66,7 +66,7 @@ protected:
         return mI2C.write(mOurAddr, data);
     }
 
-    inline bool write_str(unsigned char* str, uint32_t length){
+    inline bool write_string(unsigned char* str, uint32_t length){
         return mI2C.write_str(mOurAddr, str, length);
     }
 

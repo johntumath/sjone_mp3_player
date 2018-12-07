@@ -295,7 +295,7 @@ I2C_Base::mStateMachineStatus_t I2C_Base::i2cStateMachine()
         case slaveAddressAcked:
             clearSTARTFlag();
             // No data to transfer, this is used just to test if the slave responds
-            if(0 == mTransaction.trxSize && 0==*mTransaction.pMasterData) {
+            if(0 == mTransaction.trxSize ) {
                 setStop();
             }
             else if(0!=mTransaction.firstReg){
@@ -305,6 +305,7 @@ I2C_Base::mStateMachineStatus_t I2C_Base::i2cStateMachine()
                 mpI2CRegs->I2DAT = *(mTransaction.pMasterData);
                 ++mTransaction.pMasterData;
                 --mTransaction.trxSize;
+
                 clearSIFlag();
             }
             break;
@@ -322,7 +323,9 @@ I2C_Base::mStateMachineStatus_t I2C_Base::i2cStateMachine()
                     mpI2CRegs->I2DAT = *(mTransaction.pMasterData);
                     ++mTransaction.pMasterData;
                     --mTransaction.trxSize;
+
                     clearSIFlag();
+
                 }
             }
             break;

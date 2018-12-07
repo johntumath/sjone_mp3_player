@@ -125,6 +125,7 @@ public:
     void toggle_splash();
     void reset_screen();
     int position_cursor(uint8_t row, uint8_t column);
+    void set_rgb(uint8_t red, uint8_t green, uint8_t blue);
 private:
     void send_short_setting(uint8_t setting);
     void send_long_setting(uint8_t setting, uint8_t* options, uint8_t opt_length);

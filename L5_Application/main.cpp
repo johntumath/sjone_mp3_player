@@ -1,7 +1,7 @@
+#include <LCDdisplay.h>
 #include "FreeRTOS.h"
 #include "handlers.hpp"
 #include "tasks.hpp"
-#include "LCDdisplay.h"
 #include <LPC17xx.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -11,6 +11,7 @@
 #include <string.h>
 #include "storage.hpp"
 #include "semphr.h"
+#include "uart0_min.h"
 
 
 LCD_display display(0xe4);
@@ -20,15 +21,41 @@ QueueHandle_t mp3Bytes;
 bool playingMusic = false;
 SemaphoreHandle_t semplaysong;
 
+void shift_row(uint8_t row, uint8_t shift_amount, char* string, uint8_t len){
+    display.position_cursor(row,0);
+    char to_print [16];
+    for(int i =0; i<16;++i){
+        if(shift_amount < len){
+            to_print[i] = string[shift_amount++];
+        }
+        else
+        {
+            to_print[i] = string[(shift_amount++)%len];
+        }
+    }
+    display.write_str(to_print, 16);
+}
+
 void init_display(void*)
 {
-    char name[] = "Quick and Dirty MP3";
-    int len =19;
+//    uart0_puts("setting rgb...");
+
+    vTaskDelay(1000);
+    char name[] = "Quick and Dirty MP3       ";
+    int len =26;
+    int shamt=0;
     vTaskDelay(1);
     display.init();
-    for(int i=0; i<len; ++i){
-        display.write_char(name[i]);
-        vTaskDelay(10);
+    uint32_t color =0;
+
+
+    while(1){
+        shift_row(0,shamt++,name,len);
+        shamt = shamt % (len * 2 - 3);
+        vTaskDelay(800);
+        display.set_rgb(color&0xff, (color>>8)&0xff, (color>>16)&0xff);
+        color++;
+        printf("%i",color);
     }
 }
 
@@ -133,15 +160,17 @@ void Player(void * pvParameters)
 
 int main(void)
 {
-    xTaskCreate(init_display,"init display",1024, nullptr, 2, nullptr);
+    //xTaskCreate(init_display,"init display",1024, nullptr, 2, nullptr);
 
     
     scheduler_add_task(new terminalTask(PRIORITY_HIGH));
     semplaysong = xSemaphoreCreateBinary();
     MP3.init(P1_28, P1_29, P1_23);
     mp3Bytes = xQueueCreate(2, 512);
-    xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 2, NULL);
-    xTaskCreate(Player, "Player", STACK_BYTES(1048), NULL, 2, NULL);
+//    xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 2, NULL);
+//    xTaskCreate(Player, "Player", STACK_BYTES(1048), NULL, 2, NULL);
+
+    xTaskCreate(init_display, "Display", STACK_BYTES(2096), NULL, 2, NULL);
     scheduler_start();
     return -1;
 }
