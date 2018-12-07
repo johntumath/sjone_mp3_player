@@ -7,8 +7,6 @@
 
 #include <VS1053.h>
 
-#define min(a,b) (((a)<(b))?(a):(b))
-
 void VS1053::init(LPC1758_GPIO_Type pinDREQ, LPC1758_GPIO_Type pin_CS, LPC1758_GPIO_Type pin_DCS)
 {
      DREQ = new GPIO(pinDREQ);
@@ -20,7 +18,7 @@ void VS1053::init(LPC1758_GPIO_Type pinDREQ, LPC1758_GPIO_Type pin_CS, LPC1758_G
      _DCS->setAsOutput();
      _DCS->setHigh();
      //SPI0.initialize(8, LabSpi0::SPI, 17);
-     SPI0.initialize(8, LabSpi0::SPI, 14);
+     SPI0.initialize(8, LabSpi0::SPI, 8);
 }
 
 uint8_t VS1053::spiread(void)
@@ -105,66 +103,21 @@ void VS1053::sineTest(uint8_t n, uint16_t ms) {
   vTaskDelay(500);
 }
 
-void VS1053::setVolume(uint8_t left, uint8_t right) {
-  uint16_t volume;
-  volume = left;
-  volume <<= 8;
-  volume |= right;
-  sciWrite(SCI_VOL, volume);
+void VS1053::sendVolume(uint8_t left, uint8_t right) {
+  uint16_t volume_to_send;
+  volume_to_send = left;
+  volume_to_send <<= 8;
+  volume_to_send |= right;
+  sciWrite(SCI_VOL, volume_to_send);
 }
-
-//bool VS1053::startPlayMP3File(const char *track)
-//{
-////This function is still laggy, need to improve it.
-//    soft_reset();
-//    // reset playback
-//    sciWrite(SCI_MODE, SM_LINE1 | SM_SDINEW);
-//    // resync
-//    sciWrite(SCI_WRAMADDR, 0x1e29);
-//    sciWrite(SCI_WRAM, 0);
-//    setVolume(40,40);
-//    //Open file
-//    f_open(&currentTrack, track, FA_READ);
-//    if (&currentTrack == 0)
-//    {
-//        return false;
-//    }
-//    sciWrite(SCI_DECODE_TIME, 0x00);
-//    sciWrite(SCI_DECODE_TIME, 0x00);
-//    playingMusic = true;
-//    UINT br;
-//    //
-//    SPI0.setdivider(4);
-//    while (DREQ->read()==0);
-//    while (playingMusic)
-//    {
-//      //printf("Inside loop 1\n");
-//      f_read(&currentTrack, musicBuffer, 512, &br);
-//      while (DREQ->read()==0);
-//      if(br == 0) //No more bytes read in the file, we're done.
-//      {
-//          playingMusic = false;
-//          f_close(&currentTrack);
-//          break;
-//      }
-//      u_int8 *bufP = musicBuffer;
-//      _DCS->setLow();
-//      while(br)
-//      {
-//          while (DREQ->read()==0);
-//
-//          int t = min(32, br);
-//          spiwrite(bufP, t);
-//          bufP += t;
-//          br -= t;
-//
-//      }
-//      _DCS->setHigh();
-//    }
-//    SPI0.setdivider(14);
-//}
-
-
+void VS1053::setVolume(uint8_t v)
+{
+    volume = v;
+    float scaled_volume = 254.0 - 154.0*(volume/100.0) - 100.0;
+    uint8_t left = (uint8_t)scaled_volume;
+    uint8_t right = (uint8_t)scaled_volume;
+    sendVolume(left, right);
+}
 
 VS1053::VS1053(){}
 

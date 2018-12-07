@@ -29,18 +29,16 @@ public:
     uint16_t sciRead(uint8_t addr);
     void sineTest(uint8_t n, uint16_t ms);
     void soft_reset(void);
-    void setVolume(uint8_t left, uint8_t right);
-    bool startPlayMP3File(const char *track);
-    //bool startPlayMP3File(const char *track);
+    void sendVolume(uint8_t left, uint8_t right);
+    void setVolume(uint8_t vol);
+    void setBalance(uint8_t bal);
     virtual ~VS1053();
     VS1053();
     GPIO* DREQ;
     GPIO* _CS;
     GPIO* _DCS;
     LabSpi0 SPI0;
-    FIL currentTrack;
-    bool playingMusic;
-    uint8_t musicBuffer[512];
+    uint8_t volume;
 };
 
 #endif /* VS1053_H_ */

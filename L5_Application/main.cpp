@@ -13,10 +13,11 @@
 #include "semphr.h"
 #include "uart0_min.h"
 #include "LabGPIOInterrupt.h"
+#include <string>
 
 LCD_display display(0xe4);
 VS1053 MP3;
-char mp3FileName[32];
+std::string mp3FileName;
 LabGpioInterrupts interrupt;
 volatile bool paused, newsong;
 QueueHandle_t mp3Bytes;
@@ -75,16 +76,15 @@ void DReqISR(void)
     portYIELD_FROM_ISR(yield);
 }
 
-void setVolume(uint8_t vol)
+void ButtonPushISR()
 {
-    MP3.setVolume((uint8_t)vol,(uint8_t)vol);
-    printf("Volume set to %d\n", (uint8_t)vol);
+
 }
 
 CMD_HANDLER_FUNC(volumeHandler)
 {
     float vol= atoi(cmdParams.c_str());
-    setVolume((uint8_t)(254 - 154*(vol/100) - 100));
+    MP3.setVolume(vol);
     return true;
 }
 
@@ -112,7 +112,7 @@ void startPlay()
 {
     paused = false;
     newsong = true;
-    vTaskDelay(20);
+    vTaskDelay(50);
     newsong = false;
     xSemaphoreGive(sem_start_reader);
 }
@@ -121,7 +121,7 @@ CMD_HANDLER_FUNC(playHandler)
 {
     char filename[32] = "1:";
     strcat(filename, cmdParams.c_str());
-    strcpy(mp3FileName,filename);
+    mp3FileName = filename;
     startPlay();
     return true;
 }
@@ -166,8 +166,8 @@ void Reader(void* pvParameters)
         while(xSemaphoreTake(sem_start_reader, portMAX_DELAY)!= pdTRUE);
         //Open track for reading
         printf("Reader: Opening File\n");
-        FRESULT res = f_open(&mp3File, mp3FileName, FA_READ);
-        if (res != 0 || (isMP3File && isTxtFile)){
+        FRESULT res = f_open(&mp3File, mp3FileName.c_str(), FA_READ);
+        if (res != 0){
             PrintReadError(res);
             break;
         }
@@ -213,7 +213,6 @@ void Player(void * pvParameters)
 {
     unsigned char playerBuffer[512];
     u_int8 *bufP;
-
     while(1)
     {
         resetMP3();
@@ -248,10 +247,12 @@ int main(void)
     MP3.init(P2_7, P1_29, P1_23);
     interrupt.Initialize();
     interrupt.AttachInterruptHandler(2,7,DReqISR,InterruptCondition::kRisingEdge);
+    interrupt.AttachInterruptHandler(2,1,ButtonPushISR,InterruptCondition::kRisingEdge);
+    interrupt.AttachInterruptHandler(2,2,ButtonPushISR,InterruptCondition::kRisingEdge);
+    interrupt.AttachInterruptHandler(2,3,ButtonPushISR,InterruptCondition::kRisingEdge);
     isr_register(EINT3_IRQn, Eint3Handler);
     sem_start_reader = xSemaphoreCreateBinary();
     sem_dreq_high = xSemaphoreCreateBinary();
-    paused = false;
     mp3Bytes = xQueueCreate(2, 512);
     xTaskCreate(init_display, "Display", STACK_BYTES(2096), NULL, 2, NULL);
     xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 1, NULL);
