@@ -36,17 +36,7 @@ void DReqISR(void)
     portYIELD_FROM_ISR(yield);
 }
 
-void PlayButtonISR()
-{
-
-}
-
-void NextButtonISR()
-{
-
-}
-
-void BackButtonISR()
+void ButtonPushISR()
 {
 
 }
@@ -217,9 +207,9 @@ int main(void)
     MP3.init(P2_7, P1_29, P1_23);
     interrupt.Initialize();
     interrupt.AttachInterruptHandler(2,7,DReqISR,InterruptCondition::kRisingEdge);
-    interrupt.AttachInterruptHandler(2,1,PlayButtonISR,InterruptCondition::kRisingEdge);
-    interrupt.AttachInterruptHandler(2,2,NextButtonISR,InterruptCondition::kRisingEdge);
-    interrupt.AttachInterruptHandler(2,3,BackButtonISR,InterruptCondition::kRisingEdge);
+    interrupt.AttachInterruptHandler(2,1,ButtonPushISR,InterruptCondition::kRisingEdge);
+    interrupt.AttachInterruptHandler(2,2,ButtonPushISR,InterruptCondition::kRisingEdge);
+    interrupt.AttachInterruptHandler(2,3,ButtonPushISR,InterruptCondition::kRisingEdge);
     isr_register(EINT3_IRQn, Eint3Handler);
     sem_start_reader = xSemaphoreCreateBinary();
     sem_dreq_high = xSemaphoreCreateBinary();

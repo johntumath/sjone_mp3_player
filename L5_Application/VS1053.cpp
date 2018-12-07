@@ -7,8 +7,6 @@
 
 #include <VS1053.h>
 
-#define min(a,b) (((a)<(b))?(a):(b))
-
 void VS1053::init(LPC1758_GPIO_Type pinDREQ, LPC1758_GPIO_Type pin_CS, LPC1758_GPIO_Type pin_DCS)
 {
      DREQ = new GPIO(pinDREQ);
@@ -120,8 +118,6 @@ void VS1053::setVolume(uint8_t v)
     uint8_t right = (uint8_t)vol;
     sendVolume(left, right);
 }
-
-
 
 VS1053::VS1053(){}
 
