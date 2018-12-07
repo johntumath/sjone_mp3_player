@@ -104,18 +104,18 @@ void VS1053::sineTest(uint8_t n, uint16_t ms) {
 }
 
 void VS1053::sendVolume(uint8_t left, uint8_t right) {
-  uint16_t v;
-  v = left;
-  v <<= 8;
-  v |= right;
-  sciWrite(SCI_VOL, v);
+  uint16_t volume_to_send;
+  volume_to_send = left;
+  volume_to_send <<= 8;
+  volume_to_send |= right;
+  sciWrite(SCI_VOL, volume_to_send);
 }
 void VS1053::setVolume(uint8_t v)
 {
     volume = v;
-    float vol = 254.0 - 154.0*(volume/100.0) - 100.0;
-    uint8_t left = (uint8_t)vol;
-    uint8_t right = (uint8_t)vol;
+    float scaled_volume = 254.0 - 154.0*(volume/100.0) - 100.0;
+    uint8_t left = (uint8_t)scaled_volume;
+    uint8_t right = (uint8_t)scaled_volume;
     sendVolume(left, right);
 }
 
