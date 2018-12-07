@@ -1,3 +1,4 @@
+#include <LCDdisplay.h>
 #include "FreeRTOS.h"
 #include "handlers.hpp"
 #include "tasks.hpp"
@@ -13,12 +14,51 @@
 #include "uart0_min.h"
 #include "LabGPIOInterrupt.h"
 
+LCD_display display(0xe4);
 VS1053 MP3;
 char mp3FileName[32];
 LabGpioInterrupts interrupt;
 volatile bool paused, newsong;
 QueueHandle_t mp3Bytes;
 SemaphoreHandle_t sem_start_reader, sem_dreq_high;
+
+void shift_row(uint8_t row, uint8_t shift_amount, char* string, uint8_t len){
+    display.position_cursor(row,0);
+    char to_print [16];
+    for(int i =0; i<16;++i){
+        if(shift_amount < len){
+            to_print[i] = string[shift_amount++];
+        }
+        else
+        {
+            to_print[i] = string[(shift_amount++)%len];
+        }
+    }
+    display.write_str(to_print, 16);
+}
+
+void init_display(void*)
+{
+//    uart0_puts("setting rgb...");
+
+    vTaskDelay(1000);
+    char name[] = "Quick and Dirty MP3       ";
+    int len =26;
+    int shamt=0;
+    vTaskDelay(1);
+    display.init();
+    uint32_t color =0;
+
+
+    while(1){
+        shift_row(0,shamt++,name,len);
+        shamt = shamt % (len * 2 - 3);
+        vTaskDelay(800);
+        display.set_rgb(color&0xff, (color>>8)&0xff, (color>>16)&0xff);
+        color++;
+        printf("%i",color);
+    }
+}
 
 void Eint3Handler(void)
 {
@@ -213,6 +253,7 @@ int main(void)
     sem_dreq_high = xSemaphoreCreateBinary();
     paused = false;
     mp3Bytes = xQueueCreate(2, 512);
+    xTaskCreate(init_display, "Display", STACK_BYTES(2096), NULL, 2, NULL);
     xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 1, NULL);
     xTaskCreate(Player, "Player", STACK_BYTES(1048), NULL, 2, NULL);
     scheduler_start();
