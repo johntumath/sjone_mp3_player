@@ -132,6 +132,7 @@ void Reader(void* pvParameters)
     while (1)
     {
         //Wait for signal to open file
+
         while(xSemaphoreTake(sem_start_reader, portMAX_DELAY)!= pdTRUE);
         //Open track for reading
         printf("Reader: Opening File\n");

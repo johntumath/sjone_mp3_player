@@ -16,6 +16,7 @@
 //#include "ssp0.h"
 #include "storage.hpp"
 #include <stdio.h>
+#include <string.h>
 
 
 class VS1053 {
