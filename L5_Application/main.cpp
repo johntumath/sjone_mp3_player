@@ -12,14 +12,15 @@
 #include "storage.hpp"
 #include "semphr.h"
 #include "uart0_min.h"
-
+#include "LabGPIOInterrupt.h"
 
 LCD_display display(0xe4);
 VS1053 MP3;
-char mp3FileName[32] = "1:TRACK320.mp3";
+char mp3FileName[32];
+LabGpioInterrupts interrupt;
+volatile bool paused, newsong;
 QueueHandle_t mp3Bytes;
-bool playingMusic = false;
-SemaphoreHandle_t semplaysong;
+SemaphoreHandle_t sem_start_reader, sem_dreq_high;
 
 void shift_row(uint8_t row, uint8_t shift_amount, char* string, uint8_t len){
     display.position_cursor(row,0);
@@ -59,23 +60,98 @@ void init_display(void*)
     }
 }
 
-CMD_HANDLER_FUNC(volumeHandler){
-    uint8_t vol= atoi(cmdParams.c_str());
-    MP3.setVolume(vol,vol);
-    printf("Volume set to %d\n", vol );
+void Eint3Handler(void)
+{
+    interrupt.HandleInterrupt();
+}
+
+void DReqISR(void)
+{
+    long yield = 0;
+    if (MP3.DREQ->read() == 1)
+    {
+        xSemaphoreGiveFromISR(sem_dreq_high, &yield);
+    }
+    portYIELD_FROM_ISR(yield);
+}
+
+void setVolume(uint8_t vol)
+{
+    MP3.setVolume((uint8_t)vol,(uint8_t)vol);
+    printf("Volume set to %d\n", (uint8_t)vol);
+}
+
+CMD_HANDLER_FUNC(volumeHandler)
+{
+    float vol= atoi(cmdParams.c_str());
+    setVolume((uint8_t)(254 - 154*(vol/100) - 100));
     return true;
 }
 
-CMD_HANDLER_FUNC(pauseHandler){
+CMD_HANDLER_FUNC(pauseHandler)
+{
+    paused = !paused;
     return true;
 }
 
-CMD_HANDLER_FUNC(playHandler){
+void resetMP3()
+{
+    MP3.soft_reset();
+    MP3.soft_reset();
+    // reset playback
+    MP3.sciWrite(SCI_MODE, SM_LINE1 | SM_SDINEW);
+    // resync
+    MP3.sciWrite(SCI_CLOCKF,0x6000);
+    MP3.sciWrite(SCI_WRAMADDR, 0x1e29);
+    MP3.sciWrite(SCI_WRAM, 0);
+    MP3.sciWrite(SCI_DECODE_TIME, 0x00);
+    MP3.sciWrite(SCI_DECODE_TIME, 0x00);
+}
+
+void startPlay()
+{
+    paused = false;
+    newsong = true;
+    vTaskDelay(20);
+    newsong = false;
+    xSemaphoreGive(sem_start_reader);
+}
+
+CMD_HANDLER_FUNC(playHandler)
+{
     char filename[32] = "1:";
     strcat(filename, cmdParams.c_str());
     strcpy(mp3FileName,filename);
-    xSemaphoreGive(semplaysong);
+    startPlay();
     return true;
+}
+
+void PrintReadError(FRESULT res)
+{
+    switch(res)
+    {
+        case 1: uart0_puts("Read Error: FR_DISK_ERR"); break;
+        case 2: uart0_puts("Read Error: FR_INT_ERR"); break;
+        case 3: uart0_puts("Read Error: FR_NOT_READY"); break;
+        case 4: uart0_puts("Read Error: FR_NO_FILE"); break;
+        case 5: uart0_puts("Read Error: FR_NO_PATH"); break;
+        case 6: uart0_puts("Read Error: FR_INVALID_NAME"); break;
+        case 7: uart0_puts("Read Error: FR_DENIED"); break;
+        case 8: uart0_puts("Read Error: FR_EXIST"); break;
+        case 9: uart0_puts("Read Error: FR_INVALID_OBJECT"); break;
+        case 10: uart0_puts("Read Error: FR_WRITE_PROTECTED"); break;
+        case 11: uart0_puts("Read Error: FR_INVALID_DRIVE"); break;
+        case 12: uart0_puts("Read Error: FR_NOT_ENABLED"); break;
+        case 13: uart0_puts("Read Error: FR_NO_FILESYSTEM"); break;
+        case 14: uart0_puts("Read Error: FR_MKFS_ABORTED"); break;
+        case 15: uart0_puts("Read Error: FR_TIMEOUT"); break;
+        case 16: uart0_puts("Read Error: FR_LOCKED"); break;
+        case 17: uart0_puts("Read Error: FR_NOT_ENOUGH_CORE"); break;
+        case 18: uart0_puts("Read Error: FR_TOO_MANY_OPEN_FILES"); break;
+        case 19: uart0_puts("Read Error: FR_INVALID_PARAMETER"); break;
+        default : uart0_puts("Read Error: Unknown"); break;
+        return;
+    }
 }
 
 void Reader(void* pvParameters)
@@ -85,35 +161,51 @@ void Reader(void* pvParameters)
     uint br; // Counts the number of bytes read during a read operation.
     while (1)
     {
-        vTaskDelay(500);
         //Wait for signal to open file
-        playingMusic = false;
-        while(xSemaphoreTake(semplaysong, portMAX_DELAY)!= pdTRUE);
-        playingMusic = true;
+
+        while(xSemaphoreTake(sem_start_reader, portMAX_DELAY)!= pdTRUE);
         //Open track for reading
+        printf("Reader: Opening File\n");
         FRESULT res = f_open(&mp3File, mp3FileName, FA_READ);
-        if (res != 0)
-        {
-            printf("Error opening file in reader task.");
-            return;
+        if (res != 0 || (isMP3File && isTxtFile)){
+            PrintReadError(res);
+            break;
         }
-        f_read(&mp3File, musicBlock, 512, &br);
-        do{
-            if(br == 0) //Empty file, break.
+        res = f_read(&mp3File, musicBlock, 512, &br);
+        if(res != 0){
+            PrintReadError(res);
+            break;
+        }
+        while (br != 0){
+            if (newsong)
             {
-              break;
+                break;
             }
-            else
+            else if (!paused)
             {
                 //Push music into Queue
                 xQueueSend(mp3Bytes, &musicBlock, portMAX_DELAY);
                 //Get next block of mp3 data
-                f_read(&mp3File, musicBlock, 512, &br);
+                res = f_read(&mp3File, musicBlock, 512, &br);
+                if(res != 0)
+                {
+                    PrintReadError(res);
+                    break;
+                }
             }
-        } while (br != 0); // Loops while data still in file.
+            else if (paused)
+            {
+                vTaskDelay(10);
+            }
+            else
+            {
+                break;
+            }
+        }
         // All done reading file, time to close file,
         // and signal completion of playback, and wait for new signal.
         f_close(&mp3File);
+        printf("Reader: Closing file\n");
     }
 }
 
@@ -124,32 +216,24 @@ void Player(void * pvParameters)
 
     while(1)
     {
-        vTaskDelay(500);
-        //Wait for signal to begin playing.
-
-        MP3.soft_reset();
-        // reset playback
-        MP3.sciWrite(SCI_MODE, SM_LINE1 | SM_SDINEW);
-        // resync
-        MP3.sciWrite(SCI_CLOCKF,0x6000);
-        MP3.sciWrite(SCI_WRAMADDR, 0x1e29);
-        MP3.sciWrite(SCI_WRAM, 0);
-        MP3.sciWrite(SCI_DECODE_TIME, 0x00);
-        MP3.sciWrite(SCI_DECODE_TIME, 0x00);
-        playingMusic = true;
-        while (MP3.DREQ->read()==0);
-        while (playingMusic)
+        resetMP3();
+        while (1)
         {
             //Read off queue
             xQueueReceive(mp3Bytes, &playerBuffer, portMAX_DELAY);
             bufP = playerBuffer;
             //Begin playing the block received
-            while (MP3.DREQ->read()==0);
+            if(MP3.DREQ->read()==0)
+            {
+                while(xSemaphoreTake(sem_dreq_high, portMAX_DELAY)!= pdTRUE);
+            }
             MP3._DCS->setLow();
-            MP3.SPI0.setdivider(4);
             for (int i = 0; i < 512; i = i+32)
             {
-                while (MP3.DREQ->read()==0);
+                if(MP3.DREQ->read()==0)
+                {
+                    while(xSemaphoreTake(sem_dreq_high, portMAX_DELAY)!= pdTRUE);
+                }
                 MP3.spiwrite(bufP, 32);
                 bufP += 32;
             }
@@ -160,17 +244,18 @@ void Player(void * pvParameters)
 
 int main(void)
 {
-    //xTaskCreate(init_display,"init display",1024, nullptr, 2, nullptr);
-
-    
-    scheduler_add_task(new terminalTask(PRIORITY_HIGH));
-    semplaysong = xSemaphoreCreateBinary();
-    MP3.init(P1_28, P1_29, P1_23);
+    scheduler_add_task(new terminalTask(3));
+    MP3.init(P2_7, P1_29, P1_23);
+    interrupt.Initialize();
+    interrupt.AttachInterruptHandler(2,7,DReqISR,InterruptCondition::kRisingEdge);
+    isr_register(EINT3_IRQn, Eint3Handler);
+    sem_start_reader = xSemaphoreCreateBinary();
+    sem_dreq_high = xSemaphoreCreateBinary();
+    paused = false;
     mp3Bytes = xQueueCreate(2, 512);
-//    xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 2, NULL);
-//    xTaskCreate(Player, "Player", STACK_BYTES(1048), NULL, 2, NULL);
-
     xTaskCreate(init_display, "Display", STACK_BYTES(2096), NULL, 2, NULL);
+    xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 1, NULL);
+    xTaskCreate(Player, "Player", STACK_BYTES(1048), NULL, 2, NULL);
     scheduler_start();
     return -1;
 }
