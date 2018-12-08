@@ -158,7 +158,12 @@ void Reader(void* pvParameters)
 {
     FIL mp3File; //File descriptor for the file being read.
     unsigned char musicBlock[512]; //Local block of 512 bytes, used to move between reader and queue
+    std::string id3_header, id3_meta;
     uint br; // Counts the number of bytes read during a read operation.
+
+    id3_header.reserve(10);
+    id3_meta.reserve(125);
+
     while (1)
     {
         //Wait for signal to open file
@@ -170,6 +175,40 @@ void Reader(void* pvParameters)
         if (res != 0){
             PrintReadError(res);
             break;
+        }
+        /* Read ID3 header */
+        res = f_read(&mp3File, static_cast<void*>(&id3_header), 3, &br);
+        if(res != 0){
+            PrintReadError(res);
+            break;
+        } else {
+            if(id3_header == "TAG"){
+                res = f_read(&mp3File, static_cast<void*>(&id3_meta), 125, &br);
+            }
+            else if(id3_header == "ID3")
+            {
+                uint16_t meta_flags=0;
+                uint32_t meta_size;
+                res = f_read(&mp3File, &meta_flags, 3, &br);
+                if(res != 0){
+                    PrintReadError(res);
+                    break;
+                }
+                res = f_read(&mp3File, &meta_size, 4, &br);
+                if(res != 0){
+                    PrintReadError(res);
+                    break;
+                }
+                id3_meta.reserve(meta_size);
+                res = f_read(&mp3File, static_cast<void*>(&id3_meta), meta_size, &br);
+                if(res != 0){
+                    PrintReadError(res);
+                    break;
+                }
+            }
+            //check for id3 version number either v1: "TAG" or v2: "ID3"
+                //if v1 put 125 bytes into id3 meta
+                //else if v2 grab the remaining 7 bytes for the header and check size to get metadata
         }
         res = f_read(&mp3File, musicBlock, 512, &br);
         if(res != 0){
