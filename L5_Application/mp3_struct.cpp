@@ -20,20 +20,20 @@ void MetaData::getSongs(){
 
             //If file name ends in .mp3 or .MP3 store in string array
             if(strstr(fno.lfname, ".mp3") || strstr(fno.lfname, ".MP3")){
-                int length = strnlen(fno.lfname, 128);
-                songs[number_of_songs] = new char[length + 1];
-                strcpy(songs[number_of_songs], fno.lfname);
-                printf("Song %i: %s\n", number_of_songs, songs[number_of_songs]);
+                if(strstr(fno.lfname, "._")){
+                  continue;
+                }
+                fileNames.push_back(fno.lfname);
+                std::cout<<"Songs in vector: "<<number_of_songs<<": "<<fileNames[number_of_songs]<<"\n";
                 number_of_songs++;
             }
         }
-        number_of_songs = number_of_songs/2; //All files generate .__file.ext. Divide by 2 to get an accurate count
         printf("Number of songs: %i\n", number_of_songs);
         f_closedir(&directory);
     }
 }
 
-char *MetaData::getCurrentSong(){
-    printf("current Song: %s\n", songs[number_of_songs]);
-    return songs[current_song_index];
-}
+// char *MetaData::getCurrentSong(){
+//     printf("current Song: %s\n", songs[number_of_songs]);
+//     return songs[current_song_index];
+// }

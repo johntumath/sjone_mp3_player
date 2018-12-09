@@ -10,12 +10,14 @@
 #include <string.h>
 #include "storage.hpp"
 #include "semphr.h"
+#include "mp3_struct.h"
 
 VS1053 MP3;
 char mp3FileName[32] = "1:TRACK320.mp3";
 QueueHandle_t mp3Bytes;
 bool playingMusic = false;
 SemaphoreHandle_t semplaysong;
+MetaData test;
 
 CMD_HANDLER_FUNC(volumeHandler){
     uint8_t vol= atoi(cmdParams.c_str());
@@ -51,11 +53,10 @@ void Reader(void* pvParameters)
         playingMusic = true;
         bool isMP3File = (strstr(mp3FileName, ".mp3") == NULL &&
         strstr(mp3FileName, ".MP3") == NULL);
-        bool isTxtFile = strstr(mp3FileName, ".txt") == NULL;
 
         //Open track for reading
         FRESULT res = f_open(&mp3File, mp3FileName, FA_READ);
-        if (res != 0 || (isMP3File && isTxtFile))
+        if (res != 0 || isMP3File)
         {
           printf("Error opening file in reader task.");
           return;
@@ -123,6 +124,7 @@ void Player(void * pvParameters)
 
 int main(void)
 {
+    test.getSongs();
     scheduler_add_task(new terminalTask(PRIORITY_HIGH));
     semplaysong = xSemaphoreCreateBinary();
     MP3.init(P1_28, P1_29, P1_23);
