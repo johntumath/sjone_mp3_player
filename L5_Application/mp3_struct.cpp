@@ -1,4 +1,5 @@
 #include "mp3_struct.h"
+#include <iostream>
 
 
 /*** Auxillary Functions ***/
@@ -6,15 +7,39 @@ uint32_t endian_swap(const uint32_t& value);
 uint32_t decode_syncsafe(const uint32_t& value);
 bool is_meta_end(std::string meta_type);
 uint32_t mp3_get_length(std::string meta_length);
+bool is_mp3(std::string filename);
 /*** Aux. Func. End ***/
 
 
 MP3_Handler::MP3_Handler()
 {
-    //TODO:find each file and grab metadata for it
-    //TODO:place file into song map using `songs[Artist][Album][Song]=filename;`
     //TODO:call load_song with first song on list to initialize current_track
 
+    DIR directory;
+    static FILINFO file_info;
+    FRESULT res;
+    std::string LF_name;
+
+    LF_name.resize(150);
+    file_info.lfname = &LF_name[0];
+    file_info.lfsize = LF_name.length();
+    res = f_opendir(&directory, "1:");
+
+    if(res == FR_OK){
+        while(1){
+            res = f_readdir(&directory, &file_info);
+            if(res != FR_OK || file_info.fname[0] == 0) break;
+            if(is_mp3(LF_name)){
+                struct mp3_meta current_song = get_mp3_meta(LF_name);
+                songs[current_song.artist][current_song.album][current_song.song]=LF_name;
+
+                std::cout << "Song: " << current_song.song << " Artist: " << current_song.artist << " Album: " << current_song.artist << std::endl;
+
+            }
+        }
+
+        f_closedir(&directory);
+    }
 }
 
 //Private Fuctions
@@ -192,4 +217,12 @@ bool is_meta_end(std::string meta_type){
 uint32_t mp3_get_length(std::string meta_length)
 {
     return decode_syncsafe(endian_swap(*reinterpret_cast<const uint32_t *>(meta_length.c_str())));
+}
+
+bool is_mp3(std::string filename){
+    std::string extension(filename.end()-3, filename.end());
+    extension[0] = tolower(extension[0]);
+    extension[1] = tolower(extension[1]);
+
+    return extension == "mp3" ;
 }
