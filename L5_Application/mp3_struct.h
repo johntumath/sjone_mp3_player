@@ -8,7 +8,7 @@
 #include "ff.h"
 
 struct mp3_meta{
-    std::string arist, song, album;
+    std::string artist, song, album;
 };
 
 struct mp3_track{
