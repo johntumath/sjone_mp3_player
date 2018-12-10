@@ -24,7 +24,7 @@ volatile bool paused, newsong, playing;
 QueueHandle_t mp3Bytes;
 bool playingMusic = false;
 SemaphoreHandle_t semplaysong;
-MetaData test;
+MP3_Handler test;
 SemaphoreHandle_t sem_start_reader, sem_dreq_high;
 
 void shift_row(uint8_t row, uint8_t shift_amount, const char* string, uint8_t len){
