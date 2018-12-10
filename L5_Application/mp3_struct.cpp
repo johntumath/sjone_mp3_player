@@ -33,11 +33,10 @@ MP3_Handler::MP3_Handler()
                 struct mp3_meta current_song = get_mp3_meta(LF_name);
                 songs[current_song.artist][current_song.album][current_song.song]=LF_name;
 
+                //Remove this print statement once debugging is done
                 std::cout << "Song: " << current_song.song << " Artist: " << current_song.artist << " Album: " << current_song.artist << std::endl;
-
             }
         }
-
         f_closedir(&directory);
     }
 }
@@ -163,7 +162,7 @@ unsigned char* MP3_Handler::get_next_audio(uint32_t buffer_size)
 
 struct mp3_meta MP3_Handler::get_current_song()
 {
-    //TODO return current song
+    return current_track.meta;
 }
 
 std::vector<std::string> MP3_Handler::get_artist_list()
