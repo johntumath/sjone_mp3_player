@@ -85,17 +85,30 @@ std::string MP3_Handler::get_file_name(std::string artist, std::string album, st
     //TODO: return name of file name associated with artist album song
 }
 
+uint32_t endian_swap(const uint32_t& value){
+    uint32_t swapped_value = 0;
+    swapped_value |= (value >> 24)& 0x000000ff;
+    swapped_value |= (value << 24)& 0xff000000;
+    swapped_value |= (value << 8) & 0x00ff0000;
+    swapped_value |= (value >> 8) & 0x0000ff00;
+    return swapped_value;
+}
 
+uint32_t decode_syncsafe(const uint32_t& value){
+    return (value>>3)& (0x7f<<21)|(value>>2)& (0x7f<< 14)|(value>>1)& (0x7f << 7)|value & 0x7f;
+}
 
+bool is_meta_end(std::string meta_type){
+    if(meta_type.length() == 4) {
+        return (uint32_t)meta_type[0] == 0 && (uint32_t)meta_type[1] == 0 &&
+               (uint32_t)meta_type[2] == 0 && (uint32_t)meta_type[3] == 0;
+    }
+    else{
+        return true;
+    }
+}
 
-
-
-
-
-
-
-
-
+//Andrew's getSongs() Function. Going to leave it in case we need it
 void MP3_Handler::getSongs(){
     DIR directory;
     static FILINFO fno;
@@ -143,26 +156,3 @@ void MP3_Handler::getSongs(){
 //     printf("current Song: %s\n", songs[number_of_songs]);
 //     return songs[current_song_index];
 // }
-
-uint32_t endian_swap(const uint32_t& value){
-    uint32_t swapped_value = 0;
-    swapped_value |= (value >> 24)& 0x000000ff;
-    swapped_value |= (value << 24)& 0xff000000;
-    swapped_value |= (value << 8) & 0x00ff0000;
-    swapped_value |= (value >> 8) & 0x0000ff00;
-    return swapped_value;
-}
-
-uint32_t decode_syncsafe(const uint32_t& value){
-    return (value>>3)& (0x7f<<21)|(value>>2)& (0x7f<< 14)|(value>>1)& (0x7f << 7)|value & 0x7f;
-}
-
-bool is_meta_end(std::string meta_type){
-    if(meta_type.length() == 4) {
-        return (uint32_t)meta_type[0] == 0 && (uint32_t)meta_type[1] == 0 &&
-               (uint32_t)meta_type[2] == 0 && (uint32_t)meta_type[3] == 0;
-    }
-    else{
-        return true;
-    }
-}
