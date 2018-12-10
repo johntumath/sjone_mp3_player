@@ -166,10 +166,12 @@ void Reader(void* pvParameters)
         //Wait for signal to open file
 
         while(xSemaphoreTake(sem_start_reader, portMAX_DELAY)!= pdTRUE);
+        bool isMP3File = (strstr(mp3FileName.c_str(), ".mp3") == NULL &&
+        strstr(mp3FileName.c_str(), ".MP3") == NULL);
         //Open track for reading
         printf("Reader: Opening File\n");
         FRESULT res = f_open(&mp3File, mp3FileName.c_str(), FA_READ);
-        if (res != 0){
+        if (res != 0 || isMP3File){
             PrintReadError(res);
             break;
         }
