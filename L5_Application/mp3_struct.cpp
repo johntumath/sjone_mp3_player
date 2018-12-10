@@ -110,7 +110,19 @@ void MP3_Handler::getSongs(){
     if(res == FR_OK){
         while(1){
             res = f_readdir(&directory, &fno);
-            if(res != FR_OK || fno.fname[0] == 0) break;
+
+            if(res != FR_OK || fno.fname[0] == 0){
+              break;
+            }
+
+            if((strstr(fno.fname, ".mp3") || strstr(fno.fname, ".MP3")) && (strstr(fno.fname, "~") == NULL)){
+                if(strstr(fno.fname, "_")){
+                  continue;
+                }
+                fileNames.push_back(fno.fname);
+                std::cout<<"Songs in vector from fname: "<<number_of_songs<<": "<<fileNames[number_of_songs]<<"\n";
+                number_of_songs++;
+            }
 
             //If file name ends in .mp3 or .MP3 store in string array
             if(strstr(fno.lfname, ".mp3") || strstr(fno.lfname, ".MP3")){
@@ -118,7 +130,7 @@ void MP3_Handler::getSongs(){
                   continue;
                 }
                 fileNames.push_back(fno.lfname);
-                std::cout<<"Songs in vector: "<<number_of_songs<<": "<<fileNames[number_of_songs]<<"\n";
+                std::cout<<"Songs in vector from lfname: "<<number_of_songs<<": "<<fileNames[number_of_songs]<<"\n";
                 number_of_songs++;
             }
         }
@@ -131,15 +143,6 @@ void MP3_Handler::getSongs(){
 //     printf("current Song: %s\n", songs[number_of_songs]);
 //     return songs[current_song_index];
 // }
-
-
-
-
-
-
-
-
-
 
 uint32_t endian_swap(const uint32_t& value){
     uint32_t swapped_value = 0;
