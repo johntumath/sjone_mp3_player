@@ -74,16 +74,34 @@ struct mp3_meta MP3_Handler::get_mp3_meta(std::string mp3_file)
         }while(!meta_body.empty() && !is_meta_end(frame_head.substr(0,4)) && !all_meta_found);
     }
     else if(meta_head.substr(0,3) == "TAG"){
-
-    }else {
-
+        //TODO: Handle version 1 Tag and Tag+ metadata headers
     }
     f_close(&mp3_finfo);
     return meta_return;
 }
 
-void MP3_Handler::remove_meta_head(struct mp3_track filename)
+void MP3_Handler::remove_meta_head()
 {
+    std::string  meta_head;
+    uint bytes_read;
+    uint32_t meta_size;
+
+    meta_head.resize(11);
+    f_read(&current_track.file, static_cast<void*>(&meta_head[0]), 3, &bytes_read);
+
+    if(meta_head.substr(0,3) == "ID3"){
+        f_read(&current_track.file, static_cast<void*>(&meta_head[3]), 7, &bytes_read);
+        meta_size = mp3_get_length(meta_head.substr(3,4));
+
+        f_lseek(&current_track.file, meta_size+10);
+
+    }
+    else if(meta_head.substr(0,3) == "TAG"){
+        f_lseek(&current_track.file, 128);
+    }
+    else{
+        f_lseek(&current_track.file, 0);
+    }
 }
 
 //Public Functions

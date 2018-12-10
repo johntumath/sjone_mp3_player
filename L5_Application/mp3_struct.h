@@ -22,7 +22,7 @@ private:
   std::map <std::string, std::map<std::string, std::map<std::string, std::string>>> songs; //[Artist][Album][Song]
 
   struct mp3_meta get_mp3_meta(std::string filename);
-  void remove_meta_head(struct mp3_track filename);
+  void remove_meta_head();
 public:
   MP3_Handler();
   void load_song(std::string filename);
