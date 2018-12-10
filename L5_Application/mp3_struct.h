@@ -6,6 +6,7 @@
 #include <vector>
 #include <string.h>
 #include "ff.h"
+#include "uart0_min.h"
 
 struct mp3_meta{
     std::string artist, song, album;

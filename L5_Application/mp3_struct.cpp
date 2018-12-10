@@ -8,6 +8,7 @@ uint32_t decode_syncsafe(const uint32_t& value);
 bool is_meta_end(std::string meta_type);
 uint32_t mp3_get_length(std::string meta_length);
 bool is_mp3(std::string filename);
+void PrintReadError(FRESULT res);
 /*** Aux. Func. End ***/
 
 
@@ -20,22 +21,34 @@ MP3_Handler::MP3_Handler()
     FRESULT res;
     std::string LF_name;
 
+
     LF_name.resize(150);
     file_info.lfname = &LF_name[0];
     file_info.lfsize = LF_name.length();
+    std::cout << "\nWe're in the endgame now." << std::endl;
     res = f_opendir(&directory, "1:");
 
     if(res == FR_OK){
         while(1){
             res = f_readdir(&directory, &file_info);
-            if(res != FR_OK || file_info.fname[0] == 0) break;
+            if(res != FR_OK || file_info.fname[0] == 0) {
+                std::cout << "ERROR WERE DONE FOR\n" << std::endl;
+                break;
+            }
+            size_t str_length = strnlen(file_info.lfname, 128);
+            std::cout << "Pre-resize strnlen = " << str_length << std::endl;
+            LF_name.resize(str_length);
+            std::cout << "After-resize strnlen = " << strnlen(file_info.lfname, 128) << std::endl;
+            std::cout << "LF:Name: " << LF_name << " file_info.lfsize: " << file_info.lfsize << std::endl;
+
             if(is_mp3(LF_name)){
                 struct mp3_meta current_song = get_mp3_meta(LF_name);
                 songs[current_song.artist][current_song.album][current_song.song]=LF_name;
 
-                std::cout << "Song: " << current_song.song << " Artist: " << current_song.artist << " Album: " << current_song.artist << std::endl;
+                std::cout << "Song: " << current_song.song << " Artist: " << current_song.artist << " Album: " << current_song.album << std::endl;
 
             }
+            LF_name.resize(150);
         }
 
         f_closedir(&directory);
@@ -50,26 +63,45 @@ struct mp3_meta MP3_Handler::get_mp3_meta(std::string mp3_file)
     std::string  meta_head, frame_head, meta_body, frame_body;
     uint32_t meta_size, frame_size;
     uint bytes_read;
-
+    mp3_file = "1:" + mp3_file;
     FRESULT res = f_open(&mp3_finfo, mp3_file.c_str(), FA_READ);
+    if (res != 0){
+        PrintReadError(res);
+        std::cout << "Filename was: " << mp3_file << std::endl;
+    }
+
 
     meta_head.resize(11);
     res = f_read(&mp3_finfo, static_cast<void*>(&meta_head[0]), 3, &bytes_read);
+
+    std::cout << "Metahead: " << meta_head.substr(0,3) << std::endl;
 
     meta_return.album="unknown album";
     meta_return.artist="unknown artist";
     meta_return.song= std::move(mp3_file);
 
+    std::cout << "After Move" << std::endl;
+
     if(meta_head.substr(0,3) == "ID3"){
         bool all_meta_found=false, song_found=false, artist_found=false, album_found=false;
         std::string::iterator clear_buffer;
+        std::cout << "Before First_Fread" << std::endl;
 
         res = f_read(&mp3_finfo, static_cast<void*>(&meta_head[3]), 7, &bytes_read);
+        if (res != 0){
+            std::cout << "First f_read: " << std::endl;
+            PrintReadError(res);
+        }
+        std::cout << "After First F_Read" << std::endl;
         meta_size = mp3_get_length(meta_head.substr(3,4));
-
+        std::cout << "Meta_size: " << meta_size << std::endl;
         meta_body.resize(meta_size);
-        f_read(&mp3_finfo, static_cast<void*>(&meta_body[0]), meta_size, &bytes_read);
-
+        std::cout << "After Resize" << std::endl;
+        res = f_read(&mp3_finfo, static_cast<void*>(&meta_body[0]), meta_size, &bytes_read);
+        if (res != 0){
+            std::cout << "Second f_read: " << std::endl;
+            PrintReadError(res);
+        }
         do{
             frame_head = meta_body.substr(0,10);
             frame_size = mp3_get_length(frame_head.substr(4,4));
@@ -79,17 +111,22 @@ struct mp3_meta MP3_Handler::get_mp3_meta(std::string mp3_file)
             //clear buffer \0 from front of frame body so they are not mistaken for eof
             for(clear_buffer=frame_body.begin(); (*clear_buffer)== '\000'; ++clear_buffer);
 
+            std::cout << "Frame head: " << frame_head << std::endl;
+
             if(frame_head.substr(0,4) == "TIT2"){
+                std::cout << "Inside TIT2" << std::endl;
                 song_found = true;
                 meta_return.song = std::string(clear_buffer,frame_body.end());
                 if(artist_found && album_found) all_meta_found=true;
             }
             else if (frame_head.substr(0,4) == "TPE1"){
+                std::cout << "Inside TPE1" << std::endl;
                 artist_found =true;
                 meta_return.artist = std::string(clear_buffer,frame_body.end());
                 if(song_found && album_found) all_meta_found=true;
             }
             else if (frame_head.substr(0,4) == "TALB"){
+                std::cout << "Inside TALB" << std::endl;
                 album_found = true;
                 meta_return.album = std::string(clear_buffer,frame_body.end());
                 if(song_found && artist_found) all_meta_found=true;
@@ -216,7 +253,7 @@ bool is_meta_end(std::string meta_type){
 
 uint32_t mp3_get_length(std::string meta_length)
 {
-    return decode_syncsafe(endian_swap(*reinterpret_cast<const uint32_t *>(meta_length.c_str())));
+    return decode_syncsafe(*reinterpret_cast<const uint32_t *>(meta_length.c_str()));
 }
 
 bool is_mp3(std::string filename){
@@ -225,4 +262,32 @@ bool is_mp3(std::string filename){
     extension[1] = tolower(extension[1]);
 
     return extension == "mp3" ;
+}
+
+void PrintReadError(FRESULT res)
+{
+    switch(res)
+    {
+        case 1: uart0_puts("Read Error: FR_DISK_ERR"); break;
+        case 2: uart0_puts("Read Error: FR_INT_ERR"); break;
+        case 3: uart0_puts("Read Error: FR_NOT_READY"); break;
+        case 4: uart0_puts("Read Error: FR_NO_FILE"); break;
+        case 5: uart0_puts("Read Error: FR_NO_PATH"); break;
+        case 6: uart0_puts("Read Error: FR_INVALID_NAME"); break;
+        case 7: uart0_puts("Read Error: FR_DENIED"); break;
+        case 8: uart0_puts("Read Error: FR_EXIST"); break;
+        case 9: uart0_puts("Read Error: FR_INVALID_OBJECT"); break;
+        case 10: uart0_puts("Read Error: FR_WRITE_PROTECTED"); break;
+        case 11: uart0_puts("Read Error: FR_INVALID_DRIVE"); break;
+        case 12: uart0_puts("Read Error: FR_NOT_ENABLED"); break;
+        case 13: uart0_puts("Read Error: FR_NO_FILESYSTEM"); break;
+        case 14: uart0_puts("Read Error: FR_MKFS_ABORTED"); break;
+        case 15: uart0_puts("Read Error: FR_TIMEOUT"); break;
+        case 16: uart0_puts("Read Error: FR_LOCKED"); break;
+        case 17: uart0_puts("Read Error: FR_NOT_ENOUGH_CORE"); break;
+        case 18: uart0_puts("Read Error: FR_TOO_MANY_OPEN_FILES"); break;
+        case 19: uart0_puts("Read Error: FR_INVALID_PARAMETER"); break;
+        default : uart0_puts("Read Error: Unknown"); break;
+        return;
+    }
 }
