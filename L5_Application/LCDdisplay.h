@@ -6,6 +6,7 @@
  */
 
 #include "i2c2_device.hpp"
+#include <string>
 
 #ifndef LCDDISPLAY_H_
 #define LCDDISPLAY_H_
@@ -118,6 +119,9 @@ enum display_row{
     bottom_row = 2
 };
 
+inline display_row operator|(display_row lhs, display_row rhs)
+{return static_cast<display_row>(static_cast<int>(lhs) | static_cast<int>(rhs));}
+
 class LCD_display : public i2c2_device {
 public:
     LCD_display(uint8_t address);
@@ -130,7 +134,7 @@ public:
 
     bool init();
     bool write_char(char c);
-    bool write_str(const std::string& str);
+    bool write_str(std::string str);
     void clear_screen();
     void set_red(uint8_t value);
     void set_green(uint8_t value);

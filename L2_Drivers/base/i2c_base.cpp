@@ -68,7 +68,7 @@ bool I2C_Base::write(uint8_t deviceAddress, uint8_t value)
     return transfer(deviceAddress, 0, &value, 1);
 }
 
-bool I2C_Base::write_str(uint8_t deviceAddress, const uint8_t* str, uint32_t length){
+bool I2C_Base::write_str(uint8_t deviceAddress, uint8_t* str, uint32_t length){
     I2C_SET_WRITE_MODE(deviceAddress);
     return transfer(deviceAddress, 0, str, length);
 }
@@ -79,7 +79,7 @@ bool I2C_Base::writeRegisters(uint8_t deviceAddress, uint8_t firstReg, uint8_t* 
     return transfer(deviceAddress, firstReg, pData, bytesToWrite);
 }
 
-bool I2C_Base::transfer(uint8_t deviceAddress, uint8_t firstReg, const uint8_t* pData, uint32_t transferSize)
+bool I2C_Base::transfer(uint8_t deviceAddress, uint8_t firstReg, uint8_t* pData, uint32_t transferSize)
 {
     bool status = false;
     if(mDisableOperation || !pData) {
@@ -202,7 +202,7 @@ bool I2C_Base::init(uint32_t pclk, uint32_t busRateInKhz)
 
 /// Private ///
 
-void I2C_Base::i2cKickOffTransfer(uint8_t devAddr, uint8_t regStart, const uint8_t* pBytes, uint32_t len)
+void I2C_Base::i2cKickOffTransfer(uint8_t devAddr, uint8_t regStart, uint8_t* pBytes, uint32_t len)
 {
     mTransaction.error     = 0;
     mTransaction.slaveAddr = devAddr;

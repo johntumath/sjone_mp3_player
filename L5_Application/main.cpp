@@ -35,7 +35,7 @@ void shift_row(uint8_t row, uint8_t shift_amount, const char* string, uint8_t le
             to_print[i] = string[(shift_amount++)%len];
         }
     }
-    display.write_str(to_print, 16);
+    display.write_str(std::string(to_print, 16));
 }
 
 void View(void * pvParameters)

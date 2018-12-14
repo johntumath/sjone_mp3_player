@@ -102,7 +102,7 @@ class I2C_Base
         /**
          * repeat write for nonregister based device
          */
-        bool write_str(uint8_t deviceAddress, const uint8_t* str, uint32_t length);
+        bool write_str(uint8_t deviceAddress, uint8_t* str, uint32_t length);
 
         /// @copydoc transfer()
         bool readRegisters(uint8_t deviceAddress, uint8_t firstReg, uint8_t* pData, uint32_t transferSize);
@@ -170,7 +170,7 @@ class I2C_Base
             uint8_t slaveAddr;  ///< Slave Device Address
             uint8_t firstReg;   ///< 1st Register to Read or Write
             uint8_t error;      ///< Error if any occurred within I2C
-            const uint8_t *pMasterData;  ///< Buffer of the I2C Read or Write
+            uint8_t *pMasterData;  ///< Buffer of the I2C Read or Write
         } mI2CTransaction_t;
 
         /// The I2C Input Output frame that contains I2C transaction information
@@ -195,7 +195,7 @@ class I2C_Base
          * @param transferSize      The number of bytes to read/write
          * @returns true if the transfer was successful
          */
-        bool transfer(uint8_t deviceAddress, uint8_t firstReg, const uint8_t* pData, uint32_t transferSize);
+        bool transfer(uint8_t deviceAddress, uint8_t firstReg, uint8_t* pData, uint32_t transferSize);
 
         /**
          * This is the entry point for an I2C transaction
@@ -204,7 +204,7 @@ class I2C_Base
          * @param pBytes    The pointer to one or more data bytes to read or write
          * @param len       The length of the I2C transaction
          */
-        void i2cKickOffTransfer(uint8_t devAddr, uint8_t regStart, const uint8_t* pBytes, uint32_t len);
+        void i2cKickOffTransfer(uint8_t devAddr, uint8_t regStart, uint8_t* pBytes, uint32_t len);
 };
 
 

@@ -37,7 +37,7 @@ void LCD_display::display_shift(enum display_row row)
 {
     if(row == top_row){
         if(bottom_row_iter == bottom_row_text.end()){
-            bottom_row_iter = bottom_row_text.begin()
+            bottom_row_iter = bottom_row_text.begin();
         }
         else{
             ++bottom_row_iter;
@@ -45,7 +45,7 @@ void LCD_display::display_shift(enum display_row row)
     }
     else if (row == bottom_row){
         if(top_row_iter == top_row_text.end()){
-            top_row_iter = top_row_text.begin()
+            top_row_iter = top_row_text.begin();
         }
         else{
             ++top_row_iter;
@@ -80,10 +80,10 @@ bool LCD_display::init()
 }
 
 void LCD_display::refresh_screen(){
-    display.position_cursor(0,0);
+    position_cursor(0,0);
     write_str(create_full_row_string(std::string(bottom_row_iter, bottom_row_text.end())));
 
-    display.position_cursor(1,0);
+    position_cursor(1,0);
     write_str(create_full_row_string(std::string(top_row_iter, top_row_text.end())));
 }
 
@@ -114,7 +114,7 @@ bool LCD_display::write_char(char c)
     return write(c);
 }
 
-bool LCD_display::write_str(const std::string& str)
+bool LCD_display::write_str(std::string str)
 {
     return write_string((unsigned char *)str.c_str(), str.length());
 }
@@ -189,6 +189,7 @@ std::string create_full_row_string(std::string row_text)
         return row_text.substr(0,ROW_WIDTH);
     }
     else{
-        return row_text.resize(ROW_WIDTH,' ');
+        row_text.resize(ROW_WIDTH,' ');
+        return row_text;
     }
 }
