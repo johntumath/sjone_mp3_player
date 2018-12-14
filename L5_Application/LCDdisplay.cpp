@@ -8,9 +8,83 @@
 #include <LCDdisplay.h>
 #include <stdio.h>
 
+std::string create_full_row_string(std::string row_text);
+
+LCD_display::LCD_display(uint8_t address):i2c2_device(address)
+{}
+
+void LCD_display::set_row_text(enum display_row row, std::string text)
+{
+    if(row == top_row){
+        top_row_text = std::move(text);
+        top_row_iter = top_row_text.begin();
+    }
+    else if (row == bottom_row){
+        bottom_row_text = std::move(text);
+        bottom_row_iter = bottom_row_text.begin();
+    }
+    else
+    {
+        top_row_text = text;
+        bottom_row_text = std::move(text);
+        top_row_iter = top_row_text.begin();
+        bottom_row_iter = bottom_row_text.begin();
+    }
+    refresh_screen();
+}
+
+void LCD_display::display_shift(enum display_row row)
+{
+    if(row == top_row){
+        if(bottom_row_iter == bottom_row_text.end()){
+            bottom_row_iter = bottom_row_text.begin()
+        }
+        else{
+            ++bottom_row_iter;
+        }
+    }
+    else if (row == bottom_row){
+        if(top_row_iter == top_row_text.end()){
+            top_row_iter = top_row_text.begin()
+        }
+        else{
+            ++top_row_iter;
+        }
+    }
+    else
+    {
+        display_shift(top_row);
+        display_shift(bottom_row);
+    }
+    refresh_screen();
+}
+
+void LCD_display::reset_display_shift(enum display_row row)
+{
+    if(row == top_row){
+        top_row_iter = top_row_text.begin();
+    }
+    else if (row == bottom_row){
+        bottom_row_iter = bottom_row_text.begin();
+    }
+    else{
+        top_row_iter = top_row_text.begin();
+        bottom_row_iter = bottom_row_text.begin();
+    }
+    refresh_screen();
+}
+
 bool LCD_display::init()
 {
     return checkDeviceResponse();
+}
+
+void LCD_display::refresh_screen(){
+    display.position_cursor(0,0);
+    write_str(create_full_row_string(std::string(bottom_row_iter, bottom_row_text.end())));
+
+    display.position_cursor(1,0);
+    write_str(create_full_row_string(std::string(top_row_iter, top_row_text.end())));
 }
 
 void LCD_display::send_short_setting(uint8_t setting)
@@ -40,12 +114,9 @@ bool LCD_display::write_char(char c)
     return write(c);
 }
 
-bool LCD_display::write_str(char* str, uint32_t length)
+bool LCD_display::write_str(const std::string& str)
 {
-
-    return write_string((unsigned char *)str, length);
-//    for(uint32_t i=0; i<length; ++i) write_char(str[i]);
-    return true;
+    return write_string((unsigned char *)str.c_str(), str.length());
 }
 
 void LCD_display::clear_screen()
@@ -110,4 +181,14 @@ void LCD_display::set_rgb(uint8_t red, uint8_t green, uint8_t blue)
     set_red(red);
     set_green(green);
     set_blue(blue);
+}
+
+std::string create_full_row_string(std::string row_text)
+{
+    if(row_text.length() >= ROW_WIDTH){
+        return row_text.substr(0,ROW_WIDTH);
+    }
+    else{
+        return row_text.resize(ROW_WIDTH,' ');
+    }
 }

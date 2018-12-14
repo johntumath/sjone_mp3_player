@@ -111,12 +111,26 @@
 #define LCD_Right 0
 #define LCD_Left 1
 
+#define ROW_WIDTH 16
+
+enum display_row{
+    top_row = 1,
+    bottom_row = 2
+};
+
 class LCD_display : public i2c2_device {
 public:
-    LCD_display(uint8_t address):i2c2_device(address){};
+    LCD_display(uint8_t address);
+
+    /*top level functions*/
+    void set_rgb(uint8_t red, uint8_t green, uint8_t blue);
+    void set_row_text(enum display_row, std::string text);
+    void display_shift(enum display_row = top_row|bottom_row);
+    void reset_display_shift(enum display_row = top_row|bottom_row);
+
     bool init();
     bool write_char(char c);
-    bool write_str(char* str, uint32_t length);
+    bool write_str(const std::string& str);
     void clear_screen();
     void set_red(uint8_t value);
     void set_green(uint8_t value);
@@ -125,8 +139,11 @@ public:
     void toggle_splash();
     void reset_screen();
     int position_cursor(uint8_t row, uint8_t column);
-    void set_rgb(uint8_t red, uint8_t green, uint8_t blue);
 private:
+    std::string top_row_text, bottom_row_text;
+    std::string::iterator top_row_iter, bottom_row_iter;
+
+    void refresh_screen();
     void send_short_setting(uint8_t setting);
     void send_long_setting(uint8_t setting, uint8_t* options, uint8_t opt_length);
     void send_command(uint8_t command);
