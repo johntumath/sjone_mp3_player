@@ -43,7 +43,8 @@ public:
   std::vector<std::string> get_artist_list();
   std::vector<std::string> get_album_list(std::string artist);
   std::vector<std::string> get_song_list(std::string artist, std::string album);
-  std::string get_file_name(std::string artist, std::string album, std::string song);
+  // std::string get_file_name(std::string artist, std::string album, std::string song);
+  std::string get_file_name();
   void getSongs();
   //char *getCurrentSong();
 };

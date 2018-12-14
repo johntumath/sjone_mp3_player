@@ -80,10 +80,10 @@ std::vector<std::string> MP3_Handler::get_song_list(std::string artist, std::str
     //TODO: return vector
 }
 
-std::string MP3_Handler::get_file_name(std::string artist, std::string album, std::string song)
-{
-    //TODO: return name of file name associated with artist album song
-}
+// std::string MP3_Handler::get_file_name(std::string artist, std::string album, std::string song)
+// {
+//     //TODO: return name of file name associated with artist album song
+// }
 
 uint32_t endian_swap(const uint32_t& value){
     uint32_t swapped_value = 0;
@@ -147,11 +147,20 @@ void MP3_Handler::getSongs(){
                 number_of_songs++;
             }
         }
-        printf("Number of songs: %i\n", number_of_songs);
+        // printf("Number of songs: %i\n", number_of_songs);
         f_closedir(&directory);
     }
 }
 
+std::string MP3_Handler::get_file_name()
+{
+    //TODO: return name of file name associated with artist album song
+    getSongs();
+    // std::cout<<"Songs in vector from lfname: "<<fileNames<<"\n";
+    std::string somestring = fileNames[0];
+    std::cout<<somestring<<std::endl;
+    return somestring;
+}
 // char *MetaData::getCurrentSong(){
 //     printf("current Song: %s\n", songs[number_of_songs]);
 //     return songs[current_song_index];

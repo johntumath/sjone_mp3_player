@@ -37,6 +37,7 @@ public:
     GPIO* DREQ;
     GPIO* _CS;
     GPIO* _DCS;
+    GPIO* playPause;
     LabSpi0 SPI0;
     uint8_t volume;
 };

@@ -15,6 +15,7 @@
 #include "LabGPIOInterrupt.h"
 #include <string>
 #include "mp3_struct.h"
+#include "gpio.hpp"
 
 LCD_display display(0xe4);
 VS1053 MP3;
@@ -22,8 +23,13 @@ std::string mp3FileName;
 LabGpioInterrupts interrupt;
 volatile bool paused, newsong;
 QueueHandle_t mp3Bytes;
-SemaphoreHandle_t sem_start_reader, sem_dreq_high;
+SemaphoreHandle_t sem_start_reader, sem_dreq_high, sem_play_pause;
 MP3_Handler test;
+// GPIO playButton(P2_4).setAsInput();
+// GPIO nextButton(P2_5).setAsInput();
+// GPIO pauseButton(P2_6).setAsInput();
+// GPIO volumeUp(P2_8).setAsInput();
+// GPIO volumeDown(P2_9).setAsInput();
 
 void shift_row(uint8_t row, uint8_t shift_amount, char* string, uint8_t len){
     display.position_cursor(row,0);
@@ -78,6 +84,16 @@ void DReqISR(void)
     portYIELD_FROM_ISR(yield);
 }
 
+void playPauseISR()
+{
+  long yield = 0;
+  //mp3FileName = test.get_file_name();
+  printf("\nfile name: %s\n", mp3FileName);
+  xSemaphoreGiveFromISR(sem_play_pause, &yield);
+  uart0_puts("Play/pause semaphore given\n");
+  portYIELD_FROM_ISR(yield);
+}
+
 void ButtonPushISR()
 {
 
@@ -112,11 +128,20 @@ void resetMP3()
 
 void startPlay()
 {
+    char filename[32] = "1:";
+    strcat(filename, test.get_file_name().c_str());
+    mp3FileName = filename;
+    //std::cout<<"testing..."<<mp3FileName<<std::endl;
+    long yield = 0;
+    // mp3FileName = "1:SICKOMODE.mp3";
     paused = false;
     newsong = true;
     vTaskDelay(50);
     newsong = false;
-    xSemaphoreGive(sem_start_reader);
+    // xSemaphoreGive(sem_start_reader);
+    xSemaphoreGiveFromISR(sem_start_reader, &yield);
+    uart0_puts("startPlay semaphore given\n");
+    portYIELD_FROM_ISR(yield);
 }
 
 CMD_HANDLER_FUNC(playHandler)
@@ -169,7 +194,7 @@ void Reader(void* pvParameters)
         bool isMP3File = (strstr(mp3FileName.c_str(), ".mp3") == NULL &&
         strstr(mp3FileName.c_str(), ".MP3") == NULL);
         //Open track for reading
-        printf("Reader: Opening File\n");
+        printf("Reader: Opening File: %s\n", mp3FileName.c_str());
         FRESULT res = f_open(&mp3File, mp3FileName.c_str(), FA_READ);
         if (res != 0 || isMP3File){
             PrintReadError(res);
@@ -245,23 +270,38 @@ void Player(void * pvParameters)
     }
 }
 
+void testButton(void * pvParameters)
+{
+    while(1)
+    {
+      if(xSemaphoreTake(sem_play_pause, portMAX_DELAY))
+      {
+        uart0_puts("play semaphore taken\n");
+      }
+      vTaskDelay(1);
+    }
+}
+
 int main(void)
 {
-    test.getSongs();
+    //test.getSongs();
+    // test.get_file_name();
     scheduler_add_task(new terminalTask(3));
     MP3.init(P2_7, P1_29, P1_23);
     interrupt.Initialize();
     interrupt.AttachInterruptHandler(2,7,DReqISR,InterruptCondition::kRisingEdge);
-    interrupt.AttachInterruptHandler(2,1,ButtonPushISR,InterruptCondition::kRisingEdge);
+    interrupt.AttachInterruptHandler(2,1,startPlay,InterruptCondition::kRisingEdge);
     interrupt.AttachInterruptHandler(2,2,ButtonPushISR,InterruptCondition::kRisingEdge);
     interrupt.AttachInterruptHandler(2,3,ButtonPushISR,InterruptCondition::kRisingEdge);
     isr_register(EINT3_IRQn, Eint3Handler);
     sem_start_reader = xSemaphoreCreateBinary();
     sem_dreq_high = xSemaphoreCreateBinary();
+    sem_play_pause = xSemaphoreCreateBinary();
     mp3Bytes = xQueueCreate(2, 512);
     xTaskCreate(init_display, "Display", STACK_BYTES(2096), NULL, 2, NULL);
     xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 1, NULL);
     xTaskCreate(Player, "Player", STACK_BYTES(1048), NULL, 2, NULL);
+    //xTaskCreate(testButton, "test", STACK_BYTES(1048), NULL, 2, NULL);
     scheduler_start();
     return -1;
 }
