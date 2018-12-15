@@ -167,25 +167,31 @@ struct mp3_meta MP3_Handler::get_current_song()
 
 std::vector<std::string> MP3_Handler::get_artist_list()
 {
-    //TODO: Use Iterator in auto for loop to collect all artists into vector
-    //TODO: return vector
+    std::vector <std::string> artist_list;
+    for (auto& t : songs) artist_list.push_back(t.first);
+
+    return artist_list;
 }
 
 std::vector<std::string> MP3_Handler::get_album_list(std::string artist)
 {
-    //TODO: Use Iterator in auto for loop to collect all albums into vector
-    //TODO: return vector
+    std::vector <std::string> album_list;
+    for (auto& t : songs[artist]) album_list.push_back(t.first);
+
+    return album_list;
 }
 
 std::vector<std::string> MP3_Handler::get_song_list(std::string artist, std::string album)
 {
-    //TODO: Use Iterator in auto for loop to collect all songs into vector
-    //TODO: return vector
+    std::vector <std::string> song_list;
+    for (auto& t : songs[artist][album]) song_list.push_back(t.first);
+
+    return song_list;
 }
 
 std::string MP3_Handler::get_file_name(std::string artist, std::string album, std::string song)
 {
-    //TODO: return name of file name associated with artist album song
+    return songs[artist][album][song];
 }
 
 /******** Auxillary Function Definitions ********/
