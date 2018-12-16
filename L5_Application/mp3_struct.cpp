@@ -8,7 +8,8 @@ uint32_t decode_syncsafe(const uint32_t& value);
 bool is_meta_end(std::string meta_type);
 uint32_t mp3_get_length(std::string meta_length);
 bool is_mp3(std::string filename);
-void PrintReadError(FRESULT res);
+void PrintFileReadError(FRESULT res);
+
 /*** Aux. Func. End ***/
 
 
@@ -45,8 +46,10 @@ MP3_Handler::MP3_Handler()
                 struct mp3_meta current_song = get_mp3_meta(LF_name);
                 songs[current_song.artist][current_song.album][current_song.song]=LF_name;
 
-                std::cout << "Song: " << current_song.song << " Artist: " << current_song.artist << " Album: " << current_song.album << std::endl;
 
+                //Remove this print statement once debugging is done
+                std::cout << LF_name.c_str() << std::endl;
+                std::cout << "Song: " << current_song.song.c_str() << " Artist: " << current_song.artist << " Album: " << current_song.album << std::endl;
             }
             LF_name.resize(150);
         }
@@ -63,24 +66,18 @@ struct mp3_meta MP3_Handler::get_mp3_meta(std::string mp3_file)
     std::string  meta_head, frame_head, meta_body, frame_body;
     uint32_t meta_size, frame_size;
     uint bytes_read;
+    meta_return.album="Unknown";
+    meta_return.artist="Unknown";
+    meta_return.song = std::string(mp3_file.begin(), mp3_file.begin() + mp3_file.find('\0'));
     mp3_file = "1:" + mp3_file;
+    std::cout << "String truncate: " << meta_return.song << std::endl;
     FRESULT res = f_open(&mp3_finfo, mp3_file.c_str(), FA_READ);
     if (res != 0){
-        PrintReadError(res);
+        PrintFileReadError (res);
         std::cout << "Filename was: " << mp3_file << std::endl;
     }
-
-
     meta_head.resize(11);
     res = f_read(&mp3_finfo, static_cast<void*>(&meta_head[0]), 3, &bytes_read);
-
-    std::cout << "Metahead: " << meta_head.substr(0,3) << std::endl;
-
-    meta_return.album="unknown album";
-    meta_return.artist="unknown artist";
-    meta_return.song= std::move(mp3_file);
-
-    std::cout << "After Move" << std::endl;
 
     if(meta_head.substr(0,3) == "ID3"){
         bool all_meta_found=false, song_found=false, artist_found=false, album_found=false;
@@ -88,31 +85,38 @@ struct mp3_meta MP3_Handler::get_mp3_meta(std::string mp3_file)
         std::cout << "Before First_Fread" << std::endl;
 
         res = f_read(&mp3_finfo, static_cast<void*>(&meta_head[3]), 7, &bytes_read);
-        if (res != 0){
-            std::cout << "First f_read: " << std::endl;
-            PrintReadError(res);
+        meta_size = mp3_get_length(meta_head.substr(6,9));
+//        std::cout << "meta_head full = " << std::hex << std::uppercase << *(uint32_t*)meta_head.c_str() << std::endl;
+//        std::cout << "meta_head.substr(6,9) = " << std::hex << std::uppercase << *(uint32_t*)meta_head.substr(6,9).c_str() << std::endl;
+//        std::cout << "Metasize: " << meta_size << std::endl;
+        if (meta_size > 10)
+        {
+            return meta_return;
         }
-        std::cout << "After First F_Read" << std::endl;
-        meta_size = mp3_get_length(meta_head.substr(3,4));
-        std::cout << "Meta_size: " << meta_size << std::endl;
         meta_body.resize(meta_size);
-        std::cout << "After Resize" << std::endl;
         res = f_read(&mp3_finfo, static_cast<void*>(&meta_body[0]), meta_size, &bytes_read);
         if (res != 0){
-            std::cout << "Second f_read: " << std::endl;
-            PrintReadError(res);
+            std::cout << "Error reading file before DO: " << mp3_file << std::endl;
+            PrintFileReadError(res);
         }
         do{
+            std::cout << "Starting DO" << std::endl;
+
             frame_head = meta_body.substr(0,10);
-            frame_size = mp3_get_length(frame_head.substr(4,4));
-            frame_body.resize(frame_size);
-            frame_body = meta_body.substr(10,frame_size);
-
-            //clear buffer \0 from front of frame body so they are not mistaken for eof
-            for(clear_buffer=frame_body.begin(); (*clear_buffer)== '\000'; ++clear_buffer);
-
-            std::cout << "Frame head: " << frame_head << std::endl;
-
+            std::cout << "frame_head = " << std::hex << std::uppercase << frame_head << std::endl;
+            frame_size = mp3_get_length(frame_head.substr(4,7));
+            if (frame_size > 50)
+            {
+                std::cout << "Frame size too large: " << frame_size << std::endl;
+            }
+            else
+            {
+                frame_body.resize(frame_size);
+                frame_body = meta_body.substr(10,frame_size);
+                //clear buffer \0 from front of frame body so they are not mistaken for eof
+                for(clear_buffer=frame_body.begin(); (*clear_buffer)== '\000'; ++clear_buffer);
+            }
+            std::cout << "After clear buffer" << std::endl;
             if(frame_head.substr(0,4) == "TIT2"){
                 std::cout << "Inside TIT2" << std::endl;
                 song_found = true;
@@ -264,7 +268,8 @@ bool is_mp3(std::string filename){
     return extension == "mp3" ;
 }
 
-void PrintReadError(FRESULT res)
+
+void PrintFileReadError(FRESULT res)
 {
     switch(res)
     {

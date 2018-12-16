@@ -18,7 +18,8 @@ struct mp3_track{
 };
 
 class MP3_Handler {
-private:
+//private:
+public:
   struct mp3_track current_track;
   std::map <std::string, std::map<std::string, std::map<std::string, std::string>>> songs; //[Artist][Album][Song]
 
