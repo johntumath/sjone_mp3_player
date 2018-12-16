@@ -23,6 +23,7 @@ MP3_Handler::MP3_Handler()
     LF_name.resize(150);
     file_info.lfname = &LF_name[0];
     file_info.lfsize = LF_name.length();
+    std::cout << "And so it begins..." << std::endl;
     res = f_opendir(&directory, "1:");
 
     if(res == FR_OK){
@@ -30,6 +31,7 @@ MP3_Handler::MP3_Handler()
             res = f_readdir(&directory, &file_info);
             if(res != FR_OK || file_info.fname[0] == 0) break;
             if(is_mp3(LF_name)){
+                std::cout << "Getting metadata for: " << LF_name << std::endl;
                 struct mp3_meta current_song = get_mp3_meta(LF_name);
                 songs[current_song.artist][current_song.album][current_song.song]=LF_name;
 
@@ -60,6 +62,7 @@ struct mp3_meta MP3_Handler::get_mp3_meta(std::string mp3_file)
     meta_return.song= std::move(mp3_file);
 
     if(meta_head.substr(0,3) == "ID3"){
+        std::cout << "Inside ID3" << std::endl;
         bool all_meta_found=false, song_found=false, artist_found=false, album_found=false;
         std::string::iterator clear_buffer;
 
@@ -70,6 +73,7 @@ struct mp3_meta MP3_Handler::get_mp3_meta(std::string mp3_file)
         f_read(&mp3_finfo, static_cast<void*>(&meta_body[0]), meta_size, &bytes_read);
 
         do{
+            std::cout << "Starting DO" << std::endl;
             frame_head = meta_body.substr(0,10);
             frame_size = mp3_get_length(frame_head.substr(4,4));
             frame_body.resize(frame_size);
@@ -79,22 +83,27 @@ struct mp3_meta MP3_Handler::get_mp3_meta(std::string mp3_file)
             for(clear_buffer=frame_body.begin(); (*clear_buffer)== '\000'; ++clear_buffer);
 
             if(frame_head.substr(0,4) == "TIT2"){
+                std::cout << "Inside TIT2" << std::endl;
                 song_found = true;
                 meta_return.song = std::string(clear_buffer,frame_body.end());
                 if(artist_found && album_found) all_meta_found=true;
             }
             else if (frame_head.substr(0,4) == "TPE1"){
+                std::cout << "Inside TPE1" << std::endl;
                 artist_found =true;
                 meta_return.artist = std::string(clear_buffer,frame_body.end());
                 if(song_found && album_found) all_meta_found=true;
             }
             else if (frame_head.substr(0,4) == "TALB"){
+                std::cout << "Inside TALB" << std::endl;
                 album_found = true;
                 meta_return.album = std::string(clear_buffer,frame_body.end());
                 if(song_found && artist_found) all_meta_found=true;
             }
 
             meta_body.erase(0,frame_size+10);
+            std::cout << "End of Do:\n meta_body len = " << meta_body.length() << "\nis_meta_end(frame_head.substr(0,4)) = ";
+            std::cout << is_meta_end(frame_head.substr(0,4)) << "\nall_meta_found = " << all_meta_found << std::endl;
         }while(!meta_body.empty() && !is_meta_end(frame_head.substr(0,4)) && !all_meta_found);
     }
     else if(meta_head.substr(0,3) == "TAG"){
@@ -225,9 +234,9 @@ uint32_t mp3_get_length(std::string meta_length)
 }
 
 bool is_mp3(std::string filename){
-    std::string extension(filename.end()-3, filename.end());
+    size_t end = filename.find('\0');
+    std::string extension((filename.begin()+ (end-3)), (filename.begin()+end));
     extension[0] = tolower(extension[0]);
     extension[1] = tolower(extension[1]);
-
     return extension == "mp3" ;
 }

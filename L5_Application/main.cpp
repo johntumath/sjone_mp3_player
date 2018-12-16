@@ -14,6 +14,7 @@
 #include "uart0_min.h"
 #include "LabGPIOInterrupt.h"
 #include <string>
+#include "mp3_struct.h"
 
 LCD_display display(0xe4);
 VS1053 MP3;
@@ -301,6 +302,7 @@ void Player(void * pvParameters)
 
 int main(void)
 {
+    MP3_Handler handler;
     scheduler_add_task(new terminalTask(3));
     MP3.init(P2_7, P1_29, P1_23);
     interrupt.Initialize();
