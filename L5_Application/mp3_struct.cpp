@@ -21,28 +21,19 @@ MP3_Handler::MP3_Handler()
     static FILINFO file_info;
     FRESULT res;
     std::string LF_name;
-
-
     LF_name.resize(150);
     file_info.lfname = &LF_name[0];
     file_info.lfsize = LF_name.length();
 
     std::cout << "\nWe're in the endgame now." << std::endl;
     res = f_opendir(&directory, "1:");
-
     if(res == FR_OK){
         while(1){
             res = f_readdir(&directory, &file_info);
             if(res != FR_OK || file_info.fname[0] == 0) {
-                std::cout << "ERROR WERE DONE FOR\n" << std::endl;
+                if (res != FR_OK) PrintFileReadError(res);
                 break;
             }
-            size_t str_length = strnlen(file_info.lfname, 128);
-            std::cout << "Pre-resize strnlen = " << str_length << std::endl;
-            LF_name.resize(str_length);
-            std::cout << "After-resize strnlen = " << strnlen(file_info.lfname, 128) << std::endl;
-            std::cout << "LF:Name: " << LF_name << " file_info.lfsize: " << file_info.lfsize << std::endl;
-
             if(is_mp3(LF_name)){
                 std::cout << "Getting metadata for: " << LF_name << std::endl;
                 struct mp3_meta current_song = get_mp3_meta(LF_name);

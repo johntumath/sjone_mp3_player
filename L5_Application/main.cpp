@@ -315,7 +315,6 @@ int main(void)
     sem_start_reader = xSemaphoreCreateBinary();
     sem_dreq_high = xSemaphoreCreateBinary();
     mp3Bytes = xQueueCreate(2, 512);
-    MP3_Handler handler;
     xTaskCreate(View, "View", STACK_BYTES(2096), NULL, 3, NULL);
     xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 1, NULL);
     xTaskCreate(Player, "Player", STACK_BYTES(1048), NULL, 2, NULL);
