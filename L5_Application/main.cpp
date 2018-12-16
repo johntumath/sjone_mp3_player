@@ -24,6 +24,7 @@ volatile bool paused, newsong, playing;
 QueueHandle_t mp3Bytes;
 SemaphoreHandle_t sem_start_reader, sem_dreq_high;
 
+
 void shift_row(uint8_t row, uint8_t shift_amount, const char* string, uint8_t len){
     display.position_cursor(row,0);
     char to_print [16];
@@ -145,7 +146,7 @@ CMD_HANDLER_FUNC(playHandler)
     return true;
 }
 
-void PrintReadError(FRESULT res)
+void PrintReadErrorMain(FRESULT res)
 {
     switch(res)
     {
@@ -193,13 +194,13 @@ void Reader(void* pvParameters)
         printf("Reader: Opening File\n");
         FRESULT res = f_open(&mp3File, mp3FileName.c_str(), FA_READ);
         if (res != 0){
-            PrintReadError(res);
+            PrintReadErrorMain(res);
             break;
         }
         /* Read ID3 header */
         res = f_read(&mp3File, static_cast<void*>(&id3_header), 3, &br);
         if(res != 0){
-            PrintReadError(res);
+            PrintReadErrorMain(res);
             break;
         } else {
             if(id3_header == "TAG"){
@@ -211,18 +212,18 @@ void Reader(void* pvParameters)
                 uint32_t meta_size;
                 res = f_read(&mp3File, &meta_flags, 3, &br);
                 if(res != 0){
-                    PrintReadError(res);
+                    PrintReadErrorMain(res);
                     break;
                 }
                 res = f_read(&mp3File, &meta_size, 4, &br);
                 if(res != 0){
-                    PrintReadError(res);
+                    PrintReadErrorMain(res);
                     break;
                 }
                 id3_meta.reserve(meta_size);
                 res = f_read(&mp3File, static_cast<void*>(&id3_meta), meta_size, &br);
                 if(res != 0){
-                    PrintReadError(res);
+                    PrintReadErrorMain(res);
                     break;
                 }
             }
@@ -232,7 +233,7 @@ void Reader(void* pvParameters)
         }
         res = f_read(&mp3File, musicBlock, 512, &br);
         if(res != 0){
-            PrintReadError(res);
+            PrintReadErrorMain(res);
             break;
         }
         while (br != 0){
@@ -248,7 +249,7 @@ void Reader(void* pvParameters)
                 res = f_read(&mp3File, musicBlock, 512, &br);
                 if(res != 0)
                 {
-                    PrintReadError(res);
+                    PrintReadErrorMain(res);
                     break;
                 }
             }
@@ -314,6 +315,7 @@ int main(void)
     sem_start_reader = xSemaphoreCreateBinary();
     sem_dreq_high = xSemaphoreCreateBinary();
     mp3Bytes = xQueueCreate(2, 512);
+    MP3_Handler handler;
     xTaskCreate(View, "View", STACK_BYTES(2096), NULL, 3, NULL);
     xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 1, NULL);
     xTaskCreate(Player, "Player", STACK_BYTES(1048), NULL, 2, NULL);

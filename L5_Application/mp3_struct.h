@@ -6,6 +6,7 @@
 #include <vector>
 #include <string.h>
 #include "ff.h"
+#include "uart0_min.h"
 
 struct mp3_meta{
     std::string artist, song, album;
@@ -17,7 +18,8 @@ struct mp3_track{
 };
 
 class MP3_Handler {
-private:
+//private:
+public:
   struct mp3_track current_track;
   std::map <std::string, std::map<std::string, std::map<std::string, std::string>>> songs; //[Artist][Album][Song]
 
