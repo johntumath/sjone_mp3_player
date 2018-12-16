@@ -129,35 +129,65 @@ void MP3_Handler::remove_meta_head()
 }
 
 //Public Functions
-void MP3_Handler::load_song(std::string filename)
+void MP3_Handler::load_song(struct mp3_meta file_meta)
 {
-    //TODO:close any open file
-    //TODO:open file
-    //TODO:call remove_meta_head
-    //TODO:Load current_track with current info
+    std::string file_string("1:");
+    file_string += get_file_name(file_meta);
+
+    close_song();
+
+    f_open(&current_track.file, file_string.c_str(), FA_READ );
+    remove_meta_head();
+    current_track.meta.artist = file_meta.artist;
+    current_track.meta.album = file_meta.album;
+    current_track.meta.song = file_meta.song;
+    song_is_open = true;
+}
+
+void MP3_Handler::close_song()
+{
+    if(song_is_open){   
+        f_close(&current_track.file);
+        song_is_open = false;
+    }
 }
 
 void MP3_Handler::load_next_song()
 {
-    //TODO:close any open file
-    //TODO:find next track in album if available f(probably use built in iterators and search for maps)
-    //TODO:open file
-    //TODO:Load current_track with current info
+    std::map<std::string, std::string>::iterator next_song;
+    next_song = ++(songs[current_track.meta.artist][current_track.meta.album].find(current_track.meta.song));
+    if(next_song != songs[current_track.meta.artist][current_track.meta.album].end()){
+        current_track.meta.song = next_song->first;
+        load_song(current_track.meta);
+    }
+    else{
+        // TODO: Handle requesting next song if on first song on album
+    }
 }
 
 void MP3_Handler::load_prev_song()
 {
-    //TODO:close any open file
-    //TODO:find next track in album if available f(probably use built in iterators and search for maps)
-    //TODO:open file
-    //TODO:Load current_track with current info
+    std::map<std::string, std::string>::iterator prev_song;
+    prev_song = --songs[current_track.meta.artist][current_track.meta.album].find(current_track.meta.song);
+    if(prev_song != songs[current_track.meta.artist][current_track.meta.album].begin()
+        && prev_song != songs[current_track.meta.artist][current_track.meta.album].end()){
+        current_track.meta.song = prev_song->first;
+        load_song(current_track.meta);
+    }
+    else{
+        // TODO: Handle requesting previous song if on first song on album (prev_song==begin())
+        // TODO: Handle song not found (prev_song==end())
+    }
 }
 
-unsigned char* MP3_Handler::get_next_audio(uint32_t buffer_size)
+void MP3_Handler::get_next_audio()
 {
-    //I'm not sure if this is the correct signature for this function, but
-    //TODO: put data into buffer
-    //TODO: return buffer
+    f_read(&current_track.file, mp3bytes, 512, &current_track.bytes_read);
+}
+
+unsigned char * MP3_Handler::get_buffer()
+{
+    return mp3bytes;
 }
 
 struct mp3_meta MP3_Handler::get_current_song()
@@ -189,9 +219,9 @@ std::vector<std::string> MP3_Handler::get_song_list(std::string artist, std::str
     return song_list;
 }
 
-std::string MP3_Handler::get_file_name(std::string artist, std::string album, std::string song)
+std::string MP3_Handler::get_file_name(struct mp3_meta mp3)
 {
-    return songs[artist][album][song];
+    return songs[mp3.artist][mp3.album][mp3.song];
 }
 
 /******** Auxillary Function Definitions ********/
