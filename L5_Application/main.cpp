@@ -25,7 +25,7 @@ std::string mp3FileName;
 LabGpioInterrupts interrupt;
 volatile bool paused, newsong, next;
 QueueHandle_t mp3Bytes;
-SemaphoreHandle_t sem_start_reader, sem_dreq_high, sem_btn;
+SemaphoreHandle_t sem_start_reader, sem_dreq_high, sem_btn, sem_click, sem_held;
 SoftTimer debouncer(200);
 
 GPIO nextButton(P2_1);
@@ -297,13 +297,16 @@ void ButtonReaderTask(void * pvParameters)
         {
           while(prevButton.read() == 1)
           {
-            printf("\nleft button is held\n");
+            // printf("\nleft button is held\n");
+            xSemaphoreGive(sem_held);
+            vTaskDelay(50);
             buttonStatus = heldLeft;
           }
         }
         else
         {
           printf("\nleft button released\n");
+          xSemaphoreGive(sem_click);
         }
       }
       else if(playPauseButton.read() == 1)
@@ -314,13 +317,16 @@ void ButtonReaderTask(void * pvParameters)
         {
           while(playPauseButton.read() == 1)
           {
-            printf("\ncenter button is held\n");
+            // printf("\ncenter button is held\n");
+            xSemaphoreGive(sem_held);
+            vTaskDelay(50);
             buttonStatus = heldCenter;
           }
         }
         else
         {
           printf("\ncenter button released\n");
+          xSemaphoreGive(sem_click);
         }
       }
       else if(nextButton.read() == 1)
@@ -331,13 +337,16 @@ void ButtonReaderTask(void * pvParameters)
         {
           while(nextButton.read() == 1)
           {
-            printf("\nright button is held\n");
+            // printf("\nright button is held\n");
+            xSemaphoreGive(sem_held);
+            vTaskDelay(50);
             buttonStatus = heldRight;
           }
         }
         else
         {
           printf("\nright button released\n");
+          xSemaphoreGive(sem_click);
         }
       }
       else if(volumeUpButton.read() == 1)
@@ -348,13 +357,16 @@ void ButtonReaderTask(void * pvParameters)
         {
           while(volumeUpButton.read() == 1)
           {
-            printf("\nup button is held\n");
+            // printf("\nup button is held\n");
+            xSemaphoreGive(sem_held);
+            vTaskDelay(50);
             buttonStatus = heldUp;
           }
         }
         else
         {
           printf("\nup button released\n");
+          xSemaphoreGive(sem_click);
         }
       }
       else if(volumeDownButton.read() == 1)
@@ -365,17 +377,35 @@ void ButtonReaderTask(void * pvParameters)
         {
           while(volumeDownButton.read() == 1)
           {
-            printf("\ndown button is held\n");
+            // printf("\ndown button is held\n");
+            xSemaphoreGive(sem_held);
+            vTaskDelay(50);
             buttonStatus = heldDown;
           }
         }
         else
         {
           printf("\ndown button released\n");
+          xSemaphoreGive(sem_click);
         }
       }
       vTaskDelay(50);
       debouncer.reset();
+    }
+  }
+}
+
+void TestTask(void * pvParameters)
+{
+  while(1)
+  {
+    if(xSemaphoreTake(sem_click, 0))
+    {
+      printf("\na button has been clicked\n");
+    }
+    else if(xSemaphoreTake(sem_held, 0))
+    {
+      printf("\na button is being held\n");
     }
   }
 }
@@ -397,12 +427,15 @@ int main(void)
     sem_start_reader = xSemaphoreCreateBinary();
     sem_dreq_high = xSemaphoreCreateBinary();
     sem_btn = xSemaphoreCreateBinary();
+    sem_click = xSemaphoreCreateBinary();
+    sem_held = xSemaphoreCreateBinary();
     mp3Bytes = xQueueCreate(2, 512);
 
     xTaskCreate(init_display, "Display", STACK_BYTES(2096), NULL, 2, NULL);
     xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 1, NULL);
     xTaskCreate(Player, "Player", STACK_BYTES(1048), NULL, 2, NULL);
     xTaskCreate(ButtonReaderTask, "button", STACK_BYTES(1048), NULL, 2, NULL);
+    xTaskCreate(TestTask, "sem", STACK_BYTES(1048), NULL, 2, NULL);
     scheduler_start();
     return -1;
 }
