@@ -16,20 +16,41 @@
 #include <string>
 #include "mp3_struct.h"
 #include "gpio.hpp"
+#include "soft_timer.hpp"
+#include "task.h"
 
 LCD_display display(0xe4);
 VS1053 MP3;
 std::string mp3FileName;
 LabGpioInterrupts interrupt;
-volatile bool paused, newsong;
+volatile bool paused, newsong, next;
 QueueHandle_t mp3Bytes;
-SemaphoreHandle_t sem_start_reader, sem_dreq_high, sem_play_pause;
-MP3_Handler test;
-// GPIO playButton(P2_4).setAsInput();
-// GPIO nextButton(P2_5).setAsInput();
-// GPIO pauseButton(P2_6).setAsInput();
-// GPIO volumeUp(P2_8).setAsInput();
-// GPIO volumeDown(P2_9).setAsInput();
+SemaphoreHandle_t sem_start_reader, sem_dreq_high, sem_btn;
+SoftTimer debouncer(200);
+
+GPIO nextButton(P2_1);
+GPIO playPauseButton(P2_2);
+GPIO prevButton(P2_5);
+GPIO volumeUpButton(P2_3);
+GPIO volumeDownButton(P2_4);
+
+enum buttonList{
+  singlePressLeft,    //0
+  doublePressLeft,    //1
+  heldLeft,           //2
+  singlePressCenter,  //3
+  doublePressCenter,  //4
+  heldCenter,         //5
+  singlePressRight,   //6
+  doublePressRight,   //7
+  heldRight,          //8
+  singlePressUp,      //9
+  doublePressUp,      //10
+  heldUp,             //11
+  singlePressDown,    //12
+  doublePressDown,    //13
+  heldDown            //14
+};
 
 void shift_row(uint8_t row, uint8_t shift_amount, char* string, uint8_t len){
     display.position_cursor(row,0);
@@ -84,19 +105,11 @@ void DReqISR(void)
     portYIELD_FROM_ISR(yield);
 }
 
-void playPauseISR()
-{
-  long yield = 0;
-  //mp3FileName = test.get_file_name();
-  printf("\nfile name: %s\n", mp3FileName);
-  xSemaphoreGiveFromISR(sem_play_pause, &yield);
-  uart0_puts("Play/pause semaphore given\n");
-  portYIELD_FROM_ISR(yield);
-}
-
 void ButtonPushISR()
 {
-
+  long yield = 0;
+  xSemaphoreGiveFromISR(sem_btn, &yield);
+  portYIELD_FROM_ISR(yield);
 }
 
 CMD_HANDLER_FUNC(volumeHandler)
@@ -128,20 +141,11 @@ void resetMP3()
 
 void startPlay()
 {
-    char filename[32] = "1:";
-    strcat(filename, test.get_file_name().c_str());
-    mp3FileName = filename;
-    //std::cout<<"testing..."<<mp3FileName<<std::endl;
-    long yield = 0;
-    // mp3FileName = "1:SICKOMODE.mp3";
     paused = false;
     newsong = true;
     vTaskDelay(50);
     newsong = false;
-    // xSemaphoreGive(sem_start_reader);
-    xSemaphoreGiveFromISR(sem_start_reader, &yield);
-    uart0_puts("startPlay semaphore given\n");
-    portYIELD_FROM_ISR(yield);
+    xSemaphoreGive(sem_start_reader);
 }
 
 CMD_HANDLER_FUNC(playHandler)
@@ -270,38 +274,164 @@ void Player(void * pvParameters)
     }
 }
 
-void testButton(void * pvParameters)
+void ButtonReaderTask(void * pvParameters)
 {
-    while(1)
+  buttonList buttonStatus;
+
+  nextButton.setAsInput();
+  playPauseButton.setAsInput();
+  prevButton.setAsInput();
+  volumeUpButton.setAsInput();
+  volumeDownButton.setAsInput();
+
+  while(1)
+  {
+    while(xSemaphoreTake(sem_btn, portMAX_DELAY)!= pdTRUE);
+    if(debouncer.expired())
     {
-      if(xSemaphoreTake(sem_play_pause, portMAX_DELAY))
+      if(prevButton.read() == 1)
       {
-        uart0_puts("play semaphore taken\n");
+        buttonStatus = singlePressLeft;
+        vTaskDelay(200);
+        if(prevButton.read() == 1)
+        {
+          while(prevButton.read() == 1)
+          {
+            printf("\nleft button is held\n");
+            buttonStatus = heldLeft;
+          }
+        }
+        else
+        {
+          printf("\nleft button released\n");
+        }
       }
-      vTaskDelay(1);
+      else if(playPauseButton.read() == 1)
+      {
+        buttonStatus = singlePressCenter;
+        vTaskDelay(200);
+        if(playPauseButton.read() == 1)
+        {
+          while(playPauseButton.read() == 1)
+          {
+            printf("\ncenter button is held\n");
+            buttonStatus = heldCenter;
+          }
+        }
+        else
+        {
+          printf("\ncenter button released\n");
+        }
+      }
+      else if(nextButton.read() == 1)
+      {
+        buttonStatus = singlePressRight;
+        vTaskDelay(200);
+        if(nextButton.read() == 1)
+        {
+          while(nextButton.read() == 1)
+          {
+            printf("\nright button is held\n");
+            buttonStatus = heldRight;
+          }
+        }
+        else
+        {
+          printf("\nright button released\n");
+        }
+      }
+      else if(volumeUpButton.read() == 1)
+      {
+        buttonStatus = singlePressUp;
+        vTaskDelay(200);
+        if(volumeUpButton.read() == 1)
+        {
+          while(volumeUpButton.read() == 1)
+          {
+            printf("\nup button is held\n");
+            buttonStatus = heldUp;
+          }
+        }
+        else
+        {
+          printf("\nup button released\n");
+        }
+      }
+      else if(volumeDownButton.read() == 1)
+      {
+        buttonStatus = singlePressDown;
+        vTaskDelay(200);
+        if(volumeDownButton.read() == 1)
+        {
+          while(volumeDownButton.read() == 1)
+          {
+            printf("\ndown button is held\n");
+            buttonStatus = heldDown;
+          }
+        }
+        else
+        {
+          printf("\ndown button released\n");
+        }
+      }
+      vTaskDelay(50);
+      debouncer.reset();
     }
+  }
 }
 
 int main(void)
 {
-    //test.getSongs();
-    // test.get_file_name();
     scheduler_add_task(new terminalTask(3));
     MP3.init(P2_7, P1_29, P1_23);
     interrupt.Initialize();
+
     interrupt.AttachInterruptHandler(2,7,DReqISR,InterruptCondition::kRisingEdge);
-    interrupt.AttachInterruptHandler(2,1,startPlay,InterruptCondition::kRisingEdge);
-    interrupt.AttachInterruptHandler(2,2,ButtonPushISR,InterruptCondition::kRisingEdge);
-    interrupt.AttachInterruptHandler(2,3,ButtonPushISR,InterruptCondition::kRisingEdge);
+    interrupt.AttachInterruptHandler(2,1, ButtonPushISR, InterruptCondition::kRisingEdge);
+    interrupt.AttachInterruptHandler(2,2, ButtonPushISR, InterruptCondition::kRisingEdge);
+    interrupt.AttachInterruptHandler(2,3, ButtonPushISR, InterruptCondition::kRisingEdge);
+    interrupt.AttachInterruptHandler(2,4, ButtonPushISR, InterruptCondition::kRisingEdge);
+    interrupt.AttachInterruptHandler(2,5, ButtonPushISR, InterruptCondition::kRisingEdge);
     isr_register(EINT3_IRQn, Eint3Handler);
+
     sem_start_reader = xSemaphoreCreateBinary();
     sem_dreq_high = xSemaphoreCreateBinary();
-    sem_play_pause = xSemaphoreCreateBinary();
+    sem_btn = xSemaphoreCreateBinary();
     mp3Bytes = xQueueCreate(2, 512);
+
     xTaskCreate(init_display, "Display", STACK_BYTES(2096), NULL, 2, NULL);
     xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 1, NULL);
     xTaskCreate(Player, "Player", STACK_BYTES(1048), NULL, 2, NULL);
-    //xTaskCreate(testButton, "test", STACK_BYTES(1048), NULL, 2, NULL);
+    xTaskCreate(ButtonReaderTask, "button", STACK_BYTES(1048), NULL, 2, NULL);
     scheduler_start();
     return -1;
 }
+
+
+// void startPlay()
+// {
+//   if(debouncer.expired())
+//   {
+//     if(doubleTap == 0)
+//     {
+//       char filename[32] = "1:";
+//       strcat(filename, test.get_file_name().c_str());
+//       mp3FileName = filename;
+//       long yield = 0;
+//       paused = false;
+//       newsong = true;
+//       vTaskDelay(50);
+//       newsong = false;
+//       xSemaphoreGiveFromISR(sem_start_reader, &yield);
+//       uart0_puts("startPlay semaphore given\n");
+//       portYIELD_FROM_ISR(yield);
+//       doubleTap = 1;
+//     }
+//     else
+//     {
+//         paused = !paused;
+//         printf("\nPause Status: %d\n", paused);
+//     }
+//     debouncer.reset();
+//   }
+// }

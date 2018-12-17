@@ -25,7 +25,7 @@ struct mp3_track{
 class MP3_Handler {
 private:
   std::vector<std::string> fileNames;
-  int current_song_index;
+  int current_song_index = 0;
   int number_of_songs;
 
   struct mp3_track current_track;
@@ -33,6 +33,7 @@ private:
 
   struct mp3_meta get_mp3_meta(std::string filename);
   void remove_meta_head(struct mp3_track filename);
+
 public:
   MP3_Handler();
   void load_song(std::string filename);
@@ -43,9 +44,9 @@ public:
   std::vector<std::string> get_artist_list();
   std::vector<std::string> get_album_list(std::string artist);
   std::vector<std::string> get_song_list(std::string artist, std::string album);
-  // std::string get_file_name(std::string artist, std::string album, std::string song);
   std::string get_file_name();
   void getSongs();
+  void nextSong();
   //char *getCurrentSong();
 };
 

@@ -155,13 +155,12 @@ void MP3_Handler::getSongs(){
 std::string MP3_Handler::get_file_name()
 {
     //TODO: return name of file name associated with artist album song
-    getSongs();
-    // std::cout<<"Songs in vector from lfname: "<<fileNames<<"\n";
-    std::string somestring = fileNames[0];
+
+    std::string somestring = fileNames[current_song_index];
     std::cout<<somestring<<std::endl;
     return somestring;
 }
-// char *MetaData::getCurrentSong(){
-//     printf("current Song: %s\n", songs[number_of_songs]);
-//     return songs[current_song_index];
-// }
+
+void MP3_Handler::nextSong(){
+  current_song_index++;
+}
