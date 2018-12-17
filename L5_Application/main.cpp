@@ -15,7 +15,9 @@
 #include "LabGPIOInterrupt.h"
 #include <string>
 #include "mp3_struct.h"
+#include "Controller.h"
 
+Controller ctrl;
 LCD_display display(0xe4);
 VS1053 MP3;
 std::string mp3FileName = "Loading....";
