@@ -161,7 +161,7 @@ void MP3_Handler::load_song(struct mp3_meta file_meta)
 
 void MP3_Handler::close_song()
 {
-    if(song_is_open){   
+    if(song_is_open){
         f_close(&current_track.file);
         song_is_open = false;
     }
@@ -193,6 +193,15 @@ void MP3_Handler::load_prev_song()
         // TODO: Handle requesting previous song if on first song on album (prev_song==begin())
         // TODO: Handle song not found (prev_song==end())
     }
+}
+
+bool MP3_Handler::end_of_song(){
+  if(current_track.bytes_read)
+  {
+    return false;
+  }
+
+  return true;
 }
 
 void MP3_Handler::get_next_audio()
