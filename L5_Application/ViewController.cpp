@@ -38,7 +38,7 @@ void ViewController::update_view(void)
             bottom_row_text = control_ptr->get_menu_string();
             transmit_to_LCD();
             break;
-        case volume:
+        case volume_menu:
             top_row_text = "Volume:";
             bottom_row_text = control_ptr->get_volume();
             transmit_to_LCD();

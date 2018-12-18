@@ -12,7 +12,7 @@
 #include <mp3_struct.h>
 #include "semphr.h"
 
-enum view_t {startup, menu_artist, menu_album, menu_track, volume, playing, paused};
+enum view_t {startup, menu_artist, menu_album, menu_track, volume_menu, playing, paused};
 
 enum buttonList{
   singlePressLeft,    //0
@@ -34,7 +34,7 @@ enum buttonList{
 
 class Controller {
 public:
-    Controller();
+    Controller(SemaphoreHandle_t*, SemaphoreHandle_t*, SemaphoreHandle_t*);
     //Viewer Functions
     view_t get_view_state();
     std::string get_menu_string();
@@ -49,15 +49,21 @@ public:
     std::string get_current_track();
     // Sem_click received in the controller task, perform functions 
     void on_click(buttonList);
-    //Console functions
-    void toggle_pause();
-    void set_volume(int);
+    void song_finished();
+    bool end_of_song();
 private:
     int volume;
     MP3_Handler handler;
     view_t view_state;
     std::string menu_string;
+
+    //    sem_hold = incoming signal from button task, alerting when button is being held
+    //    sem_view_update = outgoing signal to alert the view task to refresh
+    //    sem_start_playback = outgoing signal to start the reader task
+    //    sem_song_ended = incoming signal from reader task, saying song is finished play back
     SemaphoreHandle_t* sem_hold, sem_view_update, sem_start_playback;
+
+    enum {single_song, entire_album, all_songs_by_artist} playlist;
     bool playing_song, pause, stop_playback; //status flags
     void startup_click(buttonList);
     void menu_artist_click(buttonList);

@@ -200,6 +200,10 @@ void MP3_Handler::get_next_audio()
     f_read(&current_track.file, mp3bytes, 512, &current_track.bytes_read);
 }
 
+bool MP3_Handler::end_of_song()
+{
+    return current_track.bytes_read == 0;
+}
 unsigned char * MP3_Handler::get_buffer()
 {
     return mp3bytes;

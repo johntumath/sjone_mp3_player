@@ -9,12 +9,19 @@
 
 
 
-Controller::Controller()
+Controller::Controller (SemaphoreHandle_t* sem_hold_in,
+                        SemaphoreHandle_t* sem_view_update_in,
+                        SemaphoreHandle_t* sem_start_playback_in)
 {
     volume = 80;
-    // TODO Recieve the SemaphoreHandle_t pointers here
-    // TODO Create an instance of MP3_Handler
-    // TODO Set default states.
+    playlist = single_song;
+    playing_song = false;
+    pause = false;
+    stop_playback = false;
+    view_state = startup;
+    sem_hold = sem_hold_in;
+    sem_view_update = sem_view_update_in;
+    sem_start_playback = sem_start_playback_in;
 }
 
 view_t Controller::get_view_state()
@@ -63,21 +70,13 @@ std::string Controller::get_current_track()
 
 std::string Controller::get_menu_string()
 {
+    return menu_string;
 }
 
 int Controller::get_volume()
 {
     return volume;
 }
-
-void Controller::toggle_pause()
-{
-}
-
-void Controller::set_volume(int int1)
-{
-}
-
 
 void Controller::on_click(buttonList buttonStatus)
 {
@@ -95,7 +94,7 @@ void Controller::on_click(buttonList buttonStatus)
         case menu_track:
             menu_track_click(buttonStatus);
             break;
-        case volume:
+        case volume_menu:
             volume_click(buttonStatus);
             break;
         case playing:
@@ -137,29 +136,142 @@ void Controller::menu_artist_click(buttonList buttonStatus)
    }
    else if (buttonStatus == (singlePressCenter || doublePressCenter))
    {
-
+       //TODO Begin playback of all songs in the artist's vector
    }
-
    //Left Click: Does nothing in this menu
 
 }
 void Controller::menu_album_click(buttonList buttonStatus)
 {
+   if (buttonStatus == (singlePressUp || doublePressUp))
+   {
+       //TODO Update display with the previous album in the vector
+   }
+   else if (buttonStatus == (singlePressDown || doublePressDown))
+   {
+       //TODO Update display with the next artist in the vector
+   }
+   else if (buttonStatus == (singlePressLeft || doublePressLeft))
+   {
+       //TODO Go back to artist menu
+   }
+   else if (buttonStatus == (singlePressRight || doublePressRight))
+   {
+       //TODO Go into that album's track list
+   }
+   else if (buttonStatus == (singlePressCenter || doublePressCenter))
+   {
+       //TODO Begin playback of all songs in the album's vector
+   }
 
 }
 void Controller::menu_track_click(buttonList buttonStatus)
 {
-
+    if (buttonStatus == (singlePressUp || doublePressUp))
+    {
+        //TODO Update menu display with the previous track in the vector
+    }
+    else if (buttonStatus == (singlePressDown || doublePressDown))
+    {
+        //TODO Update display with the next track in the vector
+    }
+    else if (buttonStatus == (singlePressLeft || doublePressLeft))
+    {
+        //TODO Go back to album menu
+    }
+    else if (buttonStatus == (singlePressRight || doublePressRight|| singlePressCenter || doublePressCenter))
+    {
+        //TODO Play currently selected song
+    }
 }
 void Controller::volume_click(buttonList buttonStatus)
 {
-
+    if (buttonStatus == (singlePressUp || doublePressUp))
+    {
+        //TODO Increase the volume by a certain percent and update display.
+        // Wait a time to see if user pushes up/down again, then go back to play screen
+    }
+    else if (buttonStatus == (singlePressDown || doublePressDown))
+    {
+        // TODO Decrease the volume by a certain percent and update display.
+        // Wait a time to see if user pushes up/down again, then go back to play screen
+    }
+    else if (buttonStatus == (singlePressLeft || doublePressLeft))
+    {
+        //TODO Go back to play menu
+    }
+    else if (buttonStatus == (singlePressRight || doublePressRight))
+    {
+        //TODO Go back to play menu
+    }
+    else if (buttonStatus == (singlePressCenter || doublePressCenter))
+    {
+        //TODO Go back to play menu immediately
+    }
 }
 void Controller::playing_click(buttonList buttonStatus)
 {
-
+    if (buttonStatus == (singlePressUp || doublePressUp))
+    {
+        //TODO Increase the volume by a certain percent and update display.
+        // Wait a time to see if user pushes up/down again, then go back to play screen
+    }
+    else if (buttonStatus == (singlePressDown || doublePressDown))
+    {
+        // TODO Decrease the volume by a certain percent and update display.
+        // Wait a time to see if user pushes up/down again, then go back to play screen
+    }
+    else if (buttonStatus == (singlePressLeft))
+    {
+        //TODO Go back to beginning of song
+    }
+    else if (buttonStatus == (doublePressLeft))
+    {
+        //TODO Start play back of previous song
+    }
+    else if (buttonStatus == (singlePressRight || doublePressRight))
+    {
+        //TODO Go to next song
+    }
+    else if (buttonStatus == (singlePressCenter || doublePressCenter))
+    {
+        //TODO Pause play back
+    }
 }
+
+bool Controller::end_of_song()
+{
+    return handler.end_of_song();
+}
+
 void Controller::pause_click(buttonList buttonStatus)
 {
+    if (buttonStatus == (singlePressUp || doublePressUp))
+    {
+        //TODO Increase the volume by a certain percent and update display.
+        // Wait a time to see if user pushes up/down again, then go back to play screen
+    }
+    else if (buttonStatus == (singlePressDown || doublePressDown))
+    {
+        // TODO Decrease the volume by a certain percent and update display.
+        // Wait a time to see if user pushes up/down again, then go back to play screen
+    }
+    else if (buttonStatus == (singlePressLeft || doublePressLeft))
+    {
+        //TODO Go back to play menu
+    }
+    else if (buttonStatus == (singlePressRight || doublePressRight))
+    {
+        //TODO Go back to play menu
+    }
+    else if (buttonStatus == (singlePressCenter || doublePressCenter))
+    {
+        //TODO Go back to play menu immediately
+    }
 
+}
+void Controller::song_finished()
+{
+    //TODO If no song is lined up, go back to main menu.
+    // If a song is lined up to play, begin playback.
 }

@@ -21,12 +21,13 @@
 #include "Controller.h"
 #include "ViewController.h"
 
-Controller ctrl;
+
 VS1053 MP3;
 LabGpioInterrupts interrupt;
 QueueHandle_t mp3Bytes;
 SemaphoreHandle_t sem_start_playback, sem_dreq_high, sem_btn, sem_click, sem_held, sem_view_update;
 SoftTimer debouncer(200);
+Controller ctrl(&sem_start_playback, &sem_view_update, &sem_held);
 volatile buttonList buttonStatus;
 
 void Eint3Handler(void)
@@ -71,7 +72,7 @@ void Reader(void* pvParameters)
     {
         //Wait for signal to start playback
         while(xSemaphoreTake(sem_start_playback, portMAX_DELAY)!= pdTRUE);
-        while (ctrl.is_playing_song()){
+        while (!ctrl.end_of_song()){
             if (ctrl.is_stop_requested())
             {
                 break;
@@ -90,6 +91,7 @@ void Reader(void* pvParameters)
                 break;
             }
         }
+        ctrl.song_finished();
     }
 }
 
