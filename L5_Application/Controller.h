@@ -56,8 +56,16 @@ private:
     int volume;
     MP3_Handler handler;
     view_t view_state;
+    std::string menu_string;
     SemaphoreHandle_t* sem_hold, sem_view_update, sem_start_playback;
     bool playing_song, pause, stop_playback; //status flags
+    void startup_click(buttonList);
+    void menu_artist_click(buttonList);
+    void menu_album_click(buttonList);
+    void menu_track_click(buttonList);
+    void volume_click(buttonList);
+    void playing_click(buttonList);
+    void pause_click(buttonList);
 };
 
 #endif /* CONTROLLER_H_ */

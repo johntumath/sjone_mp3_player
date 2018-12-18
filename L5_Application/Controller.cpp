@@ -2,10 +2,12 @@
  * Controller.cpp
  *
  *  Created on: Dec 16, 2018
- *      Author: John (Offline)
+ *      Author: John Tumath
  */
 
 #include <Controller.h>
+
+
 
 Controller::Controller()
 {
@@ -37,6 +39,7 @@ bool Controller::is_stop_requested()
 
 unsigned char* Controller::get_next_block()
 {
+    handler.get_next_audio();
     return handler.get_buffer();
 }
 
@@ -67,6 +70,96 @@ int Controller::get_volume()
     return volume;
 }
 
+void Controller::toggle_pause()
+{
+}
+
+void Controller::set_volume(int int1)
+{
+}
+
+
 void Controller::on_click(buttonList buttonStatus)
 {
+    switch(view_state)
+    {
+        case startup:
+            startup_click(buttonStatus);
+            break;
+        case menu_artist:
+            menu_artist_click(buttonStatus);
+            break;
+        case menu_album:
+            menu_album_click(buttonStatus);
+            break;
+        case menu_track:
+            menu_track_click(buttonStatus);
+            break;
+        case volume:
+            volume_click(buttonStatus);
+            break;
+        case playing:
+            playing_click(buttonStatus);
+            break;
+        case paused:
+            pause_click(buttonStatus);
+            break;
+        default:
+            break;
+    }
+    xSemaphoreGive(sem_view_update);
+}
+
+void Controller::startup_click(buttonList buttonStatus)
+{
+    // TODO Get vector using get_artist_list()
+    // Set the iterator to the top
+    view_state = menu_artist;
+    // Set menu_string to select the first artist in the vector
+    // menu_string =
+
+}
+void Controller::menu_artist_click(buttonList buttonStatus)
+{
+   if (buttonStatus == (singlePressUp || doublePressUp))
+   {
+       //TODO Update display with the previous artist in the vector
+   }
+   else if (buttonStatus == (singlePressDown || doublePressDown))
+   {
+       //TODO Update display with the next artist in the vector
+
+   }
+   else if (buttonStatus == (singlePressRight || doublePressRight))
+   {
+       //TODO Grab albums vector for selected artist, go to that menu
+
+   }
+   else if (buttonStatus == (singlePressCenter || doublePressCenter))
+   {
+
+   }
+
+   //Left Click: Does nothing in this menu
+
+}
+void Controller::menu_album_click(buttonList buttonStatus)
+{
+
+}
+void Controller::menu_track_click(buttonList buttonStatus)
+{
+
+}
+void Controller::volume_click(buttonList buttonStatus)
+{
+
+}
+void Controller::playing_click(buttonList buttonStatus)
+{
+
+}
+void Controller::pause_click(buttonList buttonStatus)
+{
+
 }

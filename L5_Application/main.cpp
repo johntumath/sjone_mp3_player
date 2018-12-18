@@ -137,8 +137,6 @@ void ButtonReaderTask(void * pvParameters)
   prevButton.setAsInput();
   volumeUpButton.setAsInput();
   volumeDownButton.setAsInput();
-  
-  buttonList buttonStatus;
 
   while(1)
   {
