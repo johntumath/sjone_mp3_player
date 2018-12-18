@@ -25,7 +25,7 @@ Controller ctrl;
 VS1053 MP3;
 LabGpioInterrupts interrupt;
 QueueHandle_t mp3Bytes;
-SemaphoreHandle_t sem_start_playback, sem_dreq_high, sem_btn, sem_click, sem_hold, sem_view_update;
+SemaphoreHandle_t sem_start_playback, sem_dreq_high, sem_btn, sem_click, sem_held, sem_view_update;
 SoftTimer debouncer(200);
 
 enum buttonList{
@@ -61,6 +61,13 @@ void DReqISR(void)
         xSemaphoreGiveFromISR(sem_dreq_high, &yield);
     }
     portYIELD_FROM_ISR(yield);
+}
+
+void ButtonPushISR()
+{
+  long yield = 0;
+  xSemaphoreGiveFromISR(sem_btn, &yield);
+  portYIELD_FROM_ISR(yield);
 }
 
 void resetMP3()
@@ -290,7 +297,6 @@ int main(void)
     scheduler_add_task(new terminalTask(3));
     MP3.init(P2_7, P1_29, P1_23);
     interrupt.Initialize();
-
     interrupt.AttachInterruptHandler(2,7,DReqISR,InterruptCondition::kRisingEdge);
     interrupt.AttachInterruptHandler(2,1, ButtonPushISR, InterruptCondition::kRisingEdge);
     interrupt.AttachInterruptHandler(2,2, ButtonPushISR, InterruptCondition::kRisingEdge);
@@ -298,11 +304,7 @@ int main(void)
     interrupt.AttachInterruptHandler(2,4, ButtonPushISR, InterruptCondition::kRisingEdge);
     interrupt.AttachInterruptHandler(2,5, ButtonPushISR, InterruptCondition::kRisingEdge);
     isr_register(EINT3_IRQn, Eint3Handler);
-
-    sem_start_reader = xSemaphoreCreateBinary();
-    isr_register(EINT3_IRQn, Eint3Handler);
     sem_click = xSemaphoreCreateBinary();
-    sem_hold = xSemaphoreCreateBinary();
     sem_view_update = xSemaphoreCreateBinary();
     sem_start_playback = xSemaphoreCreateBinary();
     sem_dreq_high = xSemaphoreCreateBinary();
@@ -310,14 +312,11 @@ int main(void)
     sem_click = xSemaphoreCreateBinary();
     sem_held = xSemaphoreCreateBinary();
     mp3Bytes = xQueueCreate(2, 512);
-
-    xTaskCreate(init_display, "Display", STACK_BYTES(2096), NULL, 2, NULL);
     xTaskCreate(Control, "Control", STACK_BYTES(2096), NULL, 3, NULL);
     xTaskCreate(View, "View", STACK_BYTES(2096), NULL, 1, NULL);
     xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 1, NULL);
     xTaskCreate(Player, "Player", STACK_BYTES(1048), NULL, 2, NULL);
     xTaskCreate(ButtonReaderTask, "button", STACK_BYTES(1048), NULL, 2, NULL);
-    xTaskCreate(TestTask, "sem", STACK_BYTES(1048), NULL, 2, NULL);
     scheduler_start();
     return -1;
 }

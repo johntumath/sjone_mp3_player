@@ -29,7 +29,7 @@ public:
   void remove_meta_head();
 public:
   unsigned char mp3bytes[512];
-
+  //void getSongs();
   MP3_Handler();
   void load_song(struct mp3_meta file_meta);
   void close_song();
