@@ -27,26 +27,7 @@ LabGpioInterrupts interrupt;
 QueueHandle_t mp3Bytes;
 SemaphoreHandle_t sem_start_playback, sem_dreq_high, sem_btn, sem_click, sem_held, sem_view_update;
 SoftTimer debouncer(200);
-
-enum buttonList{
-  singlePressLeft,    //0
-  doublePressLeft,    //1
-  heldLeft,           //2
-  singlePressCenter,  //3
-  doublePressCenter,  //4
-  heldCenter,         //5
-  singlePressRight,   //6
-  doublePressRight,   //7
-  heldRight,          //8
-  singlePressUp,      //9
-  doublePressUp,      //10
-  heldUp,             //11
-  singlePressDown,    //12
-  doublePressDown,    //13
-  heldDown            //14
-};
-
-
+volatile buttonList buttonStatus;
 
 void Eint3Handler(void)
 {
@@ -287,7 +268,7 @@ void Control(void * pvParameters)
     {
         // Wait for signal from button task.
         while(xSemaphoreTake(sem_click, portMAX_DELAY)!= pdTRUE);
-        ctrl.on_click();
+        ctrl.on_click(buttonStatus);
     }
 }
 

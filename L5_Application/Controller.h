@@ -14,6 +14,24 @@
 
 enum view_t {startup, menu_artist, menu_album, menu_track, volume, playing, paused};
 
+enum buttonList{
+  singlePressLeft,    //0
+  doublePressLeft,    //1
+  heldLeft,           //2
+  singlePressCenter,  //3
+  doublePressCenter,  //4
+  heldCenter,         //5
+  singlePressRight,   //6
+  doublePressRight,   //7
+  heldRight,          //8
+  singlePressUp,      //9
+  doublePressUp,      //10
+  heldUp,             //11
+  singlePressDown,    //12
+  doublePressDown,    //13
+  heldDown            //14
+};
+
 class Controller {
 public:
     Controller();
@@ -30,13 +48,13 @@ public:
     std::string get_current_album();
     std::string get_current_track();
     // Sem_click received in the controller task, perform functions 
-    void on_click();
+    void on_click(buttonList);
     //Console functions
     void toggle_pause();
     void set_volume(int);
 private:
     int volume;
-    MP3_Handler* handler;
+    MP3_Handler handler;
     view_t view_state;
     SemaphoreHandle_t* sem_hold, sem_view_update, sem_start_playback;
     bool playing_song, pause, stop_playback; //status flags

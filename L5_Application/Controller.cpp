@@ -9,9 +9,6 @@
 
 Controller::Controller()
 {
-    // TODO Bryan might need to take in the pointer instead of creating new here.
-    // (Heap vs Stack)
-    handler = new MP3_Handler();
     volume = 80;
     // TODO Recieve the SemaphoreHandle_t pointers here
     // TODO Create an instance of MP3_Handler
@@ -40,24 +37,24 @@ bool Controller::is_stop_requested()
 
 unsigned char* Controller::get_next_block()
 {
-    return handler->get_buffer();
+    return handler.get_buffer();
 }
 
 std::string Controller::get_current_artist()
 {
-    mp3_meta songinfo = handler->get_current_song();
+    mp3_meta songinfo = handler.get_current_song();
     return songinfo.artist;
 }
 
 std::string Controller::get_current_album()
 {
-    mp3_meta songinfo = handler->get_current_song();
+    mp3_meta songinfo = handler.get_current_song();
     return songinfo.album;
 }
 
 std::string Controller::get_current_track()
 {
-    mp3_meta songinfo = handler->get_current_song();
+    mp3_meta songinfo = handler.get_current_song();
     return songinfo.song;
 }
 
@@ -70,6 +67,6 @@ int Controller::get_volume()
     return volume;
 }
 
-void Controller::on_click()
+void Controller::on_click(buttonList buttonStatus)
 {
 }
