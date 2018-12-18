@@ -251,7 +251,7 @@ uint32_t endian_swap(const uint32_t& value){
 }
 
 uint32_t decode_syncsafe(const uint32_t& value){
-    return ((value>>3) & (0x7f<<21)) | ((value>>2) & (0x7f<< 14)) | ((value>>1) & (0x7f << 7)) | (value & 0x7f);
+    return (value>>3)& (0x7f<<21)|(value>>2)& (0x7f<< 14)|(value>>1)& (0x7f << 7)|value & 0x7f;
 }
 
 bool is_meta_end(std::string meta_type){
@@ -263,6 +263,59 @@ bool is_meta_end(std::string meta_type){
         return true;
     }
 }
+
+//Andrew's getSongs() Function. Going to leave it in case we need it
+void MP3_Handler::getSongs(){
+    DIR directory;
+    static FILINFO fno;
+    FRESULT res;
+    char LF_name[128];
+    fno.lfname = LF_name;
+    fno.lfsize = sizeof(LF_name);
+
+    // printf("asdf: %s\n", LF_name);
+    res = f_opendir(&directory, "1:");
+
+    if(res == FR_OK){
+        while(1){
+            res = f_readdir(&directory, &fno);
+
+            if(res != FR_OK || fno.fname[0] == 0){
+              break;
+            }
+
+            if((strstr(fno.fname, ".mp3") || strstr(fno.fname, ".MP3")) && (strstr(fno.fname, "~") == NULL)){
+                if(strstr(fno.fname, "_")){
+                  continue;
+                }
+                fileNames.push_back(fno.fname);
+                std::cout<<"Songs in vector from fname: "<<number_of_songs<<": "<<fileNames[number_of_songs]<<"\n";
+                number_of_songs++;
+            }
+
+            //If file name ends in .mp3 or .MP3 store in string array
+            if(strstr(fno.lfname, ".mp3") || strstr(fno.lfname, ".MP3")){
+                if(strstr(fno.lfname, "._")){
+                  continue;
+                }
+                fileNames.push_back(fno.lfname);
+                std::cout<<"Songs in vector from lfname: "<<number_of_songs<<": "<<fileNames[number_of_songs]<<"\n";
+                number_of_songs++;
+            }
+        }
+        // printf("Number of songs: %i\n", number_of_songs);
+        f_closedir(&directory);
+    }
+}
+
+// std::string MP3_Handler::get_file_name()
+// {
+//     //TODO: return name of file name associated with artist album song
+//
+//     std::string somestring = fileNames[current_song_index];
+//     std::cout<<somestring<<std::endl;
+//     return somestring;
+// }
 
 uint32_t mp3_get_length(std::string meta_length)
 {
