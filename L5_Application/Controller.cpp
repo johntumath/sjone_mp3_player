@@ -154,7 +154,7 @@ void Controller::menu_artist_click(buttonList buttonStatus)
        }
        else
        {
-           menu_artist_iterator = current_artist_list.end();
+           menu_artist_iterator = current_artist_list.end()-1;
        }
        view_state = menu_artist;
        text_to_display = *menu_artist_iterator;
@@ -162,7 +162,7 @@ void Controller::menu_artist_click(buttonList buttonStatus)
    else if (buttonStatus == (singlePressDown || doublePressDown))
    {
        // Update display with the next artist in the vector
-       if(menu_artist_iterator != current_artist_list.end())
+       if(menu_artist_iterator != current_artist_list.end()-1)
        {
            menu_artist_iterator++;
        }
@@ -199,11 +199,11 @@ void Controller::menu_album_click(buttonList buttonStatus)
        // Update display with the previous album in the vector
        if(menu_album_iterator != current_album_list.begin())
        {
-           menu_artist_iterator--;
+           menu_album_iterator--;
        }
        else
        {
-           menu_album_iterator = current_artist_list.end();
+           menu_album_iterator = current_artist_list.end()-1;
        }
        view_state = menu_album;
        text_to_display = *menu_album_iterator;
@@ -211,7 +211,7 @@ void Controller::menu_album_click(buttonList buttonStatus)
    else if (buttonStatus == (singlePressDown || doublePressDown))
    {
        // Update display with the next artist in the vector
-       if(menu_album_iterator != current_album_list.end())
+       if(menu_album_iterator != current_album_list.end()-1)
        {
            menu_album_iterator++;
        }
@@ -259,7 +259,7 @@ void Controller::menu_track_click(buttonList buttonStatus)
         }
         else
         {
-            menu_song_iterator = current_songs_list.end();
+            menu_song_iterator = current_songs_list.end()-1;
         }
         view_state = menu_track;
         text_to_display = *menu_song_iterator;
@@ -267,7 +267,7 @@ void Controller::menu_track_click(buttonList buttonStatus)
     else if (buttonStatus == (singlePressDown || doublePressDown))
     {
         //TODO Update display with the next track in the vector
-        if(menu_song_iterator != current_songs_list.end())
+        if(menu_song_iterator != current_songs_list.end()-1)
         {
             menu_song_iterator++;
         }
