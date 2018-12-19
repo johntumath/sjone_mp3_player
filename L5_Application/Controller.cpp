@@ -7,6 +7,10 @@
 
 #include <Controller.h>
 #include <iostream>
+#include "FreeRTOS.h"
+#include "handlers.hpp"
+#include "tasks.hpp"
+#include "task.h"
 
 namespace{
     const int VOLUME_DELTA_VALUE=5;

@@ -1,6 +1,6 @@
 #include "mp3_struct.h"
 #include <iostream>
-
+#include "tasks.hpp"
 
 /*** Auxillary Functions ***/
 uint32_t endian_swap(const uint32_t& value);
@@ -201,6 +201,7 @@ void MP3_Handler::load_song(struct mp3_meta file_meta)
     file_string += get_file_name(file_meta);
     std::cout << "LOAD SONG FILE META: " << file_string << std::endl;
     close_song();
+    vTaskDelay(100);
     std::cout << "After Close Song\n " << file_string << std::endl;
     f_open(&current_track.file, file_string.c_str(), FA_READ );
     current_track.meta.artist = file_meta.artist;

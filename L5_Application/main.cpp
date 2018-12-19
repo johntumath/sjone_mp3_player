@@ -89,7 +89,7 @@ void Reader(void* pvParameters)
                 vTaskDelay(10);
             }
         }
-        ctrl->song_finished();
+        //ctrl->song_finished();
     }
 }
 
