@@ -149,10 +149,10 @@ void ButtonReaderTask(void * pvParameters)
         {
           while(left_button.read() == 1)
           {
-            // printf("\nleft button is held\n");
+             printf("\nleft button is held\n");
+            buttonStatus = heldLeft;
             xSemaphoreGive(sem_held);
             vTaskDelay(50);
-            buttonStatus = heldLeft;
           }
         }
         else
@@ -169,10 +169,10 @@ void ButtonReaderTask(void * pvParameters)
         {
           while(center_button.read() == 1)
           {
-            // printf("\ncenter button is held\n");
+             printf("\ncenter button is held\n");
+            buttonStatus = heldCenter;
             xSemaphoreGive(sem_held);
             vTaskDelay(50);
-            buttonStatus = heldCenter;
           }
         }
         else
@@ -189,10 +189,10 @@ void ButtonReaderTask(void * pvParameters)
         {
           while(right_button.read() == 1)
           {
-            // printf("\nright button is held\n");
+             printf("\nright button is held\n");
+            buttonStatus = heldRight;
             xSemaphoreGive(sem_held);
             vTaskDelay(50);
-            buttonStatus = heldRight;
           }
         }
         else
@@ -209,10 +209,10 @@ void ButtonReaderTask(void * pvParameters)
         {
           while(up_button.read() == 1)
           {
-            // printf("\nup button is held\n");
+             printf("\nup button is held\n");
+            buttonStatus = heldUp;
             xSemaphoreGive(sem_held);
             vTaskDelay(50);
-            buttonStatus = heldUp;
           }
         }
         else
@@ -229,10 +229,10 @@ void ButtonReaderTask(void * pvParameters)
         {
           while(down_button.read() == 1)
           {
-            // printf("\ndown button is held\n");
+             printf("\ndown button is held\n");
+            buttonStatus = heldDown;
             xSemaphoreGive(sem_held);
             vTaskDelay(50);
-            buttonStatus = heldDown;
           }
         }
         else

@@ -86,6 +86,7 @@ int Controller::get_volume()
 
 void Controller::on_click(buttonList buttonStatus)
 {
+    std::cout << "view state " << view_state;
     switch(view_state)
     {
         case startup:
@@ -114,7 +115,7 @@ void Controller::on_click(buttonList buttonStatus)
             startup_click(buttonStatus);
             break;
     }
-    xSemaphoreGive(sem_view_update);
+    xSemaphoreGive(*sem_view_update);
 }
 
 void Controller::startup_click(buttonList buttonStatus)
@@ -288,8 +289,8 @@ void Controller::menu_track_click(buttonList buttonStatus)
         handler.load_song(current_song);
         view_state = playing;
         text_to_display = *current_song_iterator;
-        xSemaphoreGive(sem_start_playback); //TODO Handle When song is currently playing !!!~!
-        xSemaphoreGive(sem_view_update);
+        xSemaphoreGive(*sem_start_playback); //TODO Handle When song is currently playing !!!~!
+        xSemaphoreGive(*sem_view_update);
     }
 }
 void Controller::volume_click(buttonList buttonStatus)
@@ -305,7 +306,7 @@ void Controller::volume_click(buttonList buttonStatus)
             volume = MAX_VOLUME;
 
         view_state = volume_menu;
-        xSemaphoreGive(sem_view_update);
+        xSemaphoreGive(*sem_view_update);
 
         //TODO Update Volume for MP3 Decoder
 
@@ -321,7 +322,7 @@ void Controller::volume_click(buttonList buttonStatus)
             volume = MIN_VOLUME;
 
         view_state = volume_menu;
-        xSemaphoreGive(sem_view_update);
+        xSemaphoreGive(*sem_view_update);
 
         //TODO Update Volume for MP3 Decoder
 
@@ -331,19 +332,19 @@ void Controller::volume_click(buttonList buttonStatus)
     else if (buttonStatus == (singlePressLeft || doublePressLeft))
     {
         view_state = playing;
-        xSemaphoreGive(sem_view_update);
+        xSemaphoreGive(*sem_view_update);
         //TODO Go back to play menu
     }
     else if (buttonStatus == (singlePressRight || doublePressRight))
     {
         view_state = playing;
-        xSemaphoreGive(sem_view_update);
+        xSemaphoreGive(*sem_view_update);
         //TODO Go back to play menu
     }
     else if (buttonStatus == (singlePressCenter || doublePressCenter))
     {
         view_state = playing;
-        xSemaphoreGive(sem_view_update);
+        xSemaphoreGive(*sem_view_update);
         //TODO Go back to play menu immediately
     }
 }
@@ -360,7 +361,7 @@ void Controller::playing_click(buttonList buttonStatus)
             volume = MAX_VOLUME;
 
         view_state = volume_menu;
-        xSemaphoreGive(sem_view_update);
+        xSemaphoreGive(*sem_view_update);
 
         //TODO Update Volume for MP3 Decoder
     }
@@ -373,7 +374,7 @@ void Controller::playing_click(buttonList buttonStatus)
             volume = MIN_VOLUME;
 
         view_state = volume_menu;
-        xSemaphoreGive(sem_view_update);
+        xSemaphoreGive(*sem_view_update);
 
         //TODO Update Volume for MP3 Decoder
     }
@@ -392,8 +393,8 @@ void Controller::playing_click(buttonList buttonStatus)
             handler.load_song(current_song);
             view_state = playing;
             text_to_display = *current_song_iterator;
-            xSemaphoreGive(sem_start_playback);
-            xSemaphoreGive(sem_view_update);
+            xSemaphoreGive(*sem_start_playback);
+            xSemaphoreGive(*sem_view_update);
         }
     }
     else if (buttonStatus == (singlePressCenter || doublePressCenter))
@@ -423,7 +424,7 @@ void Controller::pause_click(buttonList buttonStatus)
             volume = MAX_VOLUME;
 
         view_state = volume_menu;
-        xSemaphoreGive(sem_view_update);
+        xSemaphoreGive(*sem_view_update);
 
         //TODO Update Volume for MP3 Decoder
     }
@@ -436,7 +437,7 @@ void Controller::pause_click(buttonList buttonStatus)
             volume = MIN_VOLUME;
 
         view_state = volume_menu;
-        xSemaphoreGive(sem_view_update);
+        xSemaphoreGive(*sem_view_update);
 
         //TODO Update Volume for MP3 Decoder
     }
@@ -462,12 +463,12 @@ void Controller::song_finished()
         current_song.song = *current_song_iterator;
         handler.load_song(current_song);
         text_to_display = *current_song_iterator;
-        xSemaphoreGive(sem_start_playback);
-        xSemaphoreGive(sem_view_update);
+        xSemaphoreGive(*sem_start_playback);
+        xSemaphoreGive(*sem_view_update);
     }
     else{
         //TODO Handle being at the end of the album
         view_state = menu_artist;
-        xSemaphoreGive(sem_view_update);
+        xSemaphoreGive(*sem_view_update);
     }
 }
