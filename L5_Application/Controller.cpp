@@ -401,6 +401,10 @@ void Controller::playing_click(buttonList buttonStatus)
         xSemaphoreGive(*sem_view_update);
 
     }
+    else if (buttonStatus == heldLeft)
+    {
+
+    }
     else if (buttonStatus == singlePressLeft || buttonStatus ==  doublePressLeft)
     {
         //TODO Stop playing song, go back to track menu.
@@ -487,13 +491,54 @@ void Controller::pause_click(buttonList buttonStatus)
 
         //TODO Update Volume for MP3 Decoder
     }
+    else if (buttonStatus == heldCenter)
+    {
+        // Go to menu
+        current_artist_list = handler.get_artist_list();
+        menu_artist_iterator = current_artist_list.begin();
+        text_to_display = *menu_artist_iterator;
+        view_state = menu_artist;
+    }
     else if (buttonStatus == singlePressLeft || buttonStatus == doublePressLeft)
     {
-        //TODO Go back to play menu
+        // Restart song
+        // Go to previous song
+        if(current_song_iterator != current_songs_list.begin())
+        {
+            --current_song_iterator;
+            struct mp3_meta current_song = handler.get_current_song();
+            current_song.song = *current_song_iterator;
+            handler.load_song(current_song);
+            view_state = playing;
+            text_to_display = *current_song_iterator;
+            xSemaphoreGive(*sem_start_playback);
+            xSemaphoreGive(*sem_view_update);
+        }
+        else
+        {
+            struct mp3_meta current_song = handler.get_current_song();
+            current_song.song = *current_song_iterator;
+            handler.load_song(current_song);
+            view_state = playing;
+            text_to_display = *current_song_iterator;
+            xSemaphoreGive(*sem_start_playback);
+            xSemaphoreGive(*sem_view_update);
+        }
     }
     else if (buttonStatus == singlePressRight || buttonStatus == doublePressRight)
     {
-        //TODO Go back to play menu
+        // Play Next Song
+        if(current_song_iterator != current_songs_list.end() &&
+                    ++current_song_iterator != current_songs_list.end())
+        {
+            struct mp3_meta current_song = handler.get_current_song();
+            current_song.song = *current_song_iterator;
+            handler.load_song(current_song);
+            view_state = playing;
+            text_to_display = *current_song_iterator;
+            xSemaphoreGive(*sem_start_playback);
+            xSemaphoreGive(*sem_view_update);
+        }
     }
     else if (buttonStatus == singlePressCenter || buttonStatus == doublePressCenter)
     {

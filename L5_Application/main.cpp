@@ -265,11 +265,9 @@ void View(void * pvParameters)
     {
         // Wait for signal from controller to update the view.
         if(xSemaphoreTake(sem_view_update, SHIFT_DELAY)== pdTRUE){
-            std::cout<<"update"<<std::endl;
             VC.update_view();
         }
         else{
-            std::cout<<"shift"<<std::endl;
             VC.shift_rows();
         }
     }
