@@ -20,7 +20,7 @@ public:
 private:
     void transmit_to_LCD();
     Controller* control_ptr;
-    LCD_display* LCD;
+    LCD_display LCD;
     view_t current_view;
     std::string top_row_text;
     std::string bottom_row_text;

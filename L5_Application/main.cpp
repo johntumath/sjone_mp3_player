@@ -20,6 +20,7 @@
 #include "task.h"
 #include "Controller.h"
 #include "ViewController.h"
+#include<iostream>
 
 
 VS1053 MP3;
@@ -249,12 +250,17 @@ void ButtonReaderTask(void * pvParameters)
 
 void View(void * pvParameters)
 {
+    std::cout << "in view" << std::endl;
     ViewController VC(&ctrl);
+    std::cout << "Exit view constructor" << std::endl;
     while(1)
     {
         // Wait for signal from controller to update the view.
+        std::cout << "view wait for semaphore"<< std::endl;
         while(xSemaphoreTake(sem_view_update, portMAX_DELAY)!= pdTRUE);
-        VC.update_view();
+        std::cout << "before update view"<< std::endl;
+//        VC.update_view();
+        std::cout << "after update view"<< std::endl;
     }
 }
 

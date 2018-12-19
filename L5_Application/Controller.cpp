@@ -87,7 +87,7 @@ int Controller::get_volume()
 
 void Controller::on_click(buttonList buttonStatus)
 {
-    std::cout << "view state " << view_state;
+    std::cout << "view state " << view_state << std::endl;
     switch(view_state)
     {
         case startup:

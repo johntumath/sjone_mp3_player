@@ -6,12 +6,17 @@
  */
 
 #include <ViewController.h>
+#include <iostream>
 
-ViewController::ViewController(Controller* ctrl)
+ViewController::ViewController(Controller* ctrl) : LCD(0xe4)
 {
+    top_row_text = "QUICK AND DIRTY";
+    bottom_row_text = "MP3 PLAYER";
+
     control_ptr = ctrl;
-    LCD = new LCD_display(0xe4);
     current_view = startup;
+
+    transmit_to_LCD();
 }
 
 void ViewController::update_view(void)
@@ -61,6 +66,6 @@ void ViewController::update_view(void)
 
 void ViewController::transmit_to_LCD()
 {
-    LCD->set_row_text(top_row,top_row_text);
-    LCD->set_row_text(bottom_row,bottom_row_text);
+    LCD.set_row_text(top_row,top_row_text);
+    LCD.set_row_text(bottom_row,bottom_row_text);
 }

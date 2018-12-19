@@ -7,6 +7,7 @@
 
 #include <LCDdisplay.h>
 #include <stdio.h>
+#include <iostream>
 
 std::string create_full_row_string(std::string row_text);
 
@@ -15,6 +16,7 @@ LCD_display::LCD_display(uint8_t address):i2c2_device(address)
 
 void LCD_display::set_row_text(enum display_row row, std::string text)
 {
+
     if(row == top_row){
         top_row_text = std::move(text);
         top_row_iter = top_row_text.begin();
@@ -81,10 +83,11 @@ bool LCD_display::init()
 
 void LCD_display::refresh_screen(){
     position_cursor(0,0);
-    write_str(create_full_row_string(std::string(bottom_row_iter, bottom_row_text.end())));
+
+    write_str(create_full_row_string(bottom_row_text));
 
     position_cursor(1,0);
-    write_str(create_full_row_string(std::string(top_row_iter, top_row_text.end())));
+    write_str(create_full_row_string(top_row_text));
 }
 
 void LCD_display::send_short_setting(uint8_t setting)
@@ -116,6 +119,9 @@ bool LCD_display::write_char(char c)
 
 bool LCD_display::write_str(std::string str)
 {
+//    std::cout<< str << std::endl;
+//    return true;
+//    return write_string((unsigned char *)"test", 4);
     return write_string((unsigned char *)str.c_str(), str.length());
 }
 
@@ -185,7 +191,7 @@ void LCD_display::set_rgb(uint8_t red, uint8_t green, uint8_t blue)
 
 std::string create_full_row_string(std::string row_text)
 {
-    if(row_text.length() >= ROW_WIDTH){
+    if(row_text.length() > ROW_WIDTH){
         return row_text.substr(0,ROW_WIDTH);
     }
     else{
