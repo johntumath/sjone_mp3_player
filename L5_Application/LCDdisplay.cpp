@@ -37,7 +37,7 @@ void LCD_display::set_row_text(enum display_row row, std::string text)
 
 void LCD_display::display_shift(enum display_row row)
 {
-    if(row == top_row){
+    if(row == bottom_row){
         if(bottom_row_iter == bottom_row_text.end()){
             bottom_row_iter = bottom_row_text.begin();
         }
@@ -45,7 +45,7 @@ void LCD_display::display_shift(enum display_row row)
             ++bottom_row_iter;
         }
     }
-    else if (row == bottom_row){
+    else if (row == top_row){
         if(top_row_iter == top_row_text.end()){
             top_row_iter = top_row_text.begin();
         }
@@ -82,11 +82,15 @@ bool LCD_display::init()
 }
 
 void LCD_display::refresh_screen(){
-    position_cursor(0,0);
-    write_str(create_full_row_string(top_row_text));
+    if(!top_row_text.empty()){
+        position_cursor(0,0);
+        write_str(create_full_row_string(std::string(top_row_iter, top_row_text.end())));
+    }
 
-    position_cursor(1,0);
-    write_str(create_full_row_string(bottom_row_text));
+    if(!bottom_row_text.empty()){
+        position_cursor(1,0);
+        write_str(create_full_row_string(std::string(bottom_row_iter, bottom_row_text.end())));
+    }
 }
 
 void LCD_display::send_short_setting(uint8_t setting)

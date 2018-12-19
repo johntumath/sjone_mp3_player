@@ -202,7 +202,6 @@ void MP3_Handler::load_song(struct mp3_meta file_meta)
 
     close_song();
     std::cout << "After Close Song\n " << file_string << std::endl;
-    for (int i = 0; i < 10000000; i++){};
     f_open(&current_track.file, file_string.c_str(), FA_READ );
     current_track.meta.artist = file_meta.artist;
     current_track.meta.album = file_meta.album;
