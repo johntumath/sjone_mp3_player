@@ -98,13 +98,17 @@ void Player(void * pvParameters)
     u_int8 *bufP;
     while(1)
     {
+        std::cout << "in player" << std::endl;
         resetMP3();
+        MP3.sineTest(68,200);
         while (1)
         {
+            std::cout << "player loop start" << std::endl;
             //Read off queue
             xQueueReceive(mp3Bytes, &playerBuffer, portMAX_DELAY);
             bufP = playerBuffer;
             //Begin playing the block received
+            std::cout << "past player queue" << std::endl;
             if(MP3.DREQ->read()==0)
             {
                 while(xSemaphoreTake(sem_dreq_high, portMAX_DELAY)!= pdTRUE);
