@@ -7,6 +7,12 @@
 
 #include <Controller.h>
 
+namespace{
+    const int VOLUME_DELTA_VALUE=5;
+    const int MAX_VOLUME = 100;
+    const int MIN_VOLUME = 0;
+}
+
 
 
 Controller::Controller (SemaphoreHandle_t* sem_hold_in,
@@ -240,11 +246,35 @@ void Controller::volume_click(buttonList buttonStatus)
 {
     if (buttonStatus == (singlePressUp || doublePressUp))
     {
+        volume += VOLUME_DELTA_VALUE;
+
+        int new_volume = volume + VOLUME_DELTA_VALUE;
+        if(new_volume < MAX_VOLUME)
+            volume = new_volume;
+        else
+            volume = MAX_VOLUME;
+
+        view_state = volume_menu;
+        xSemaphoreGive(sem_view_update);
+
+        //TODO Update Volume for MP3 Decoder
+
         //TODO Increase the volume by a certain percent and update display.
         // Wait a time to see if user pushes up/down again, then go back to play screen
     }
     else if (buttonStatus == (singlePressDown || doublePressDown))
     {
+        int new_volume = volume - VOLUME_DELTA_VALUE;
+        if(new_volume > MIN_VOLUME)
+            volume = new_volume;
+        else
+            volume = MIN_VOLUME;
+
+        view_state = volume_menu;
+        xSemaphoreGive(sem_view_update);
+
+        //TODO Update Volume for MP3 Decoder
+
         // TODO Decrease the volume by a certain percent and update display.
         // Wait a time to see if user pushes up/down again, then go back to play screen
     }
@@ -265,13 +295,31 @@ void Controller::playing_click(buttonList buttonStatus)
 {
     if (buttonStatus == (singlePressUp || doublePressUp))
     {
-        //TODO Increase the volume by a certain percent and update display.
-        // Wait a time to see if user pushes up/down again, then go back to play screen
+        volume += VOLUME_DELTA_VALUE;
+
+        int new_volume = volume + VOLUME_DELTA_VALUE;
+        if(new_volume < MAX_VOLUME)
+            volume = new_volume;
+        else
+            volume = MAX_VOLUME;
+
+        view_state = volume_menu;
+        xSemaphoreGive(sem_view_update);
+
+        //TODO Update Volume for MP3 Decoder
     }
     else if (buttonStatus == (singlePressDown || doublePressDown))
     {
-        // TODO Decrease the volume by a certain percent and update display.
-        // Wait a time to see if user pushes up/down again, then go back to play screen
+        int new_volume = volume - VOLUME_DELTA_VALUE;
+        if(new_volume > MIN_VOLUME)
+            volume = new_volume;
+        else
+            volume = MIN_VOLUME;
+
+        view_state = volume_menu;
+        xSemaphoreGive(sem_view_update);
+
+        //TODO Update Volume for MP3 Decoder
     }
     else if (buttonStatus == (singlePressLeft))
     {
@@ -300,13 +348,31 @@ void Controller::pause_click(buttonList buttonStatus)
 {
     if (buttonStatus == (singlePressUp || doublePressUp))
     {
-        //TODO Increase the volume by a certain percent and update display.
-        // Wait a time to see if user pushes up/down again, then go back to play screen
+        volume += VOLUME_DELTA_VALUE;
+
+        int new_volume = volume + VOLUME_DELTA_VALUE;
+        if(new_volume < MAX_VOLUME)
+            volume = new_volume;
+        else
+            volume = MAX_VOLUME;
+
+        view_state = volume_menu;
+        xSemaphoreGive(sem_view_update);
+
+        //TODO Update Volume for MP3 Decoder
     }
     else if (buttonStatus == (singlePressDown || doublePressDown))
     {
-        // TODO Decrease the volume by a certain percent and update display.
-        // Wait a time to see if user pushes up/down again, then go back to play screen
+        int new_volume = volume - VOLUME_DELTA_VALUE;
+        if(new_volume > MIN_VOLUME)
+            volume = new_volume;
+        else
+            volume = MIN_VOLUME;
+
+        view_state = volume_menu;
+        xSemaphoreGive(sem_view_update);
+
+        //TODO Update Volume for MP3 Decoder
     }
     else if (buttonStatus == (singlePressLeft || doublePressLeft))
     {
