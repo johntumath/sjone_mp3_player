@@ -110,6 +110,8 @@ void Controller::on_click(buttonList buttonStatus)
             pause_click(buttonStatus);
             break;
         default:
+            view_state = startup;
+            startup_click(buttonStatus);
             break;
     }
     xSemaphoreGive(sem_view_update);
@@ -118,9 +120,10 @@ void Controller::on_click(buttonList buttonStatus)
 void Controller::startup_click(buttonList buttonStatus)
 {
     // TODO Get vector using get_artist_list()
-    // Set the iterator to the top
+    // TODO Add splash
+    // TODO Set the iterator to the top
     view_state = menu_artist;
-    // Set menu_string to select the first artist in the vector
+    // TODO Set menu_string to select the first artist in the vector
     // menu_string =
 
 }
@@ -131,6 +134,7 @@ void Controller::menu_artist_click(buttonList buttonStatus)
        current_artist_list = handler.get_artist_list();
        menu_artist_iterator = current_artist_list.begin();
        text_to_display = *menu_artist_iterator;
+       view_state = menu_artist;
    }
    if (buttonStatus == (singlePressUp || doublePressUp))
    {
@@ -176,6 +180,7 @@ void Controller::menu_artist_click(buttonList buttonStatus)
        view_state = menu_album;
    }
    //Left Click: Does nothing in this menu
+   //TODO Left click might bring us back to Song Playing Menu
 }
 void Controller::menu_album_click(buttonList buttonStatus)
 {
@@ -270,7 +275,21 @@ void Controller::menu_track_click(buttonList buttonStatus)
     }
     else if (buttonStatus == (singlePressRight || doublePressRight|| singlePressCenter || doublePressCenter))
     {
-        //TODO Play currently selected song
+
+        struct mp3_meta current_song;
+        current_song.artist = *menu_artist_iterator;
+        current_song.album = *menu_album_iterator;
+        current_song.song = *menu_song_iterator;
+
+        current_artist_iterator = menu_artist_iterator;
+        current_album_iterator = menu_album_iterator;
+        current_song_iterator = menu_song_iterator;
+
+        handler.load_song(current_song);
+        view_state = playing;
+        text_to_display = *current_song_iterator;
+        xSemaphoreGive(sem_start_playback); //TODO Handle When song is currently playing !!!~!
+        xSemaphoreGive(sem_view_update);
     }
 }
 void Controller::volume_click(buttonList buttonStatus)
@@ -311,14 +330,20 @@ void Controller::volume_click(buttonList buttonStatus)
     }
     else if (buttonStatus == (singlePressLeft || doublePressLeft))
     {
+        view_state = playing;
+        xSemaphoreGive(sem_view_update);
         //TODO Go back to play menu
     }
     else if (buttonStatus == (singlePressRight || doublePressRight))
     {
+        view_state = playing;
+        xSemaphoreGive(sem_view_update);
         //TODO Go back to play menu
     }
     else if (buttonStatus == (singlePressCenter || doublePressCenter))
     {
+        view_state = playing;
+        xSemaphoreGive(sem_view_update);
         //TODO Go back to play menu immediately
     }
 }
@@ -436,6 +461,7 @@ void Controller::song_finished()
         struct mp3_meta current_song = handler.get_current_song();
         current_song.song = *current_song_iterator;
         handler.load_song(current_song);
+        text_to_display = *current_song_iterator;
         xSemaphoreGive(sem_start_playback);
         xSemaphoreGive(sem_view_update);
     }

@@ -125,29 +125,29 @@ void Player(void * pvParameters)
 
 void ButtonReaderTask(void * pvParameters)
 {
-  GPIO nextButton(P2_1);
-  GPIO playPauseButton(P2_2);
-  GPIO prevButton(P2_5);
-  GPIO volumeUpButton(P2_3);
-  GPIO volumeDownButton(P2_4);
-  nextButton.setAsInput();
-  playPauseButton.setAsInput();
-  prevButton.setAsInput();
-  volumeUpButton.setAsInput();
-  volumeDownButton.setAsInput();
+  GPIO right_button(P2_1);
+  GPIO center_button(P2_2);
+  GPIO left_button(P2_5);
+  GPIO up_button(P2_3);
+  GPIO down_button(P2_4);
+  right_button.setAsInput();
+  center_button.setAsInput();
+  left_button.setAsInput();
+  up_button.setAsInput();
+  down_button.setAsInput();
 
   while(1)
   {
     while(xSemaphoreTake(sem_btn, portMAX_DELAY)!= pdTRUE);
     if(debouncer.expired())
     {
-      if(prevButton.read() == 1)
+      if(left_button.read() == 1)
       {
         buttonStatus = singlePressLeft;
         vTaskDelay(200);
-        if(prevButton.read() == 1)
+        if(left_button.read() == 1)
         {
-          while(prevButton.read() == 1)
+          while(left_button.read() == 1)
           {
             // printf("\nleft button is held\n");
             xSemaphoreGive(sem_held);
@@ -161,13 +161,13 @@ void ButtonReaderTask(void * pvParameters)
           xSemaphoreGive(sem_click);
         }
       }
-      else if(playPauseButton.read() == 1)
+      else if(center_button.read() == 1)
       {
         buttonStatus = singlePressCenter;
         vTaskDelay(200);
-        if(playPauseButton.read() == 1)
+        if(center_button.read() == 1)
         {
-          while(playPauseButton.read() == 1)
+          while(center_button.read() == 1)
           {
             // printf("\ncenter button is held\n");
             xSemaphoreGive(sem_held);
@@ -181,13 +181,13 @@ void ButtonReaderTask(void * pvParameters)
           xSemaphoreGive(sem_click);
         }
       }
-      else if(nextButton.read() == 1)
+      else if(right_button.read() == 1)
       {
         buttonStatus = singlePressRight;
         vTaskDelay(200);
-        if(nextButton.read() == 1)
+        if(right_button.read() == 1)
         {
-          while(nextButton.read() == 1)
+          while(right_button.read() == 1)
           {
             // printf("\nright button is held\n");
             xSemaphoreGive(sem_held);
@@ -201,13 +201,13 @@ void ButtonReaderTask(void * pvParameters)
           xSemaphoreGive(sem_click);
         }
       }
-      else if(volumeUpButton.read() == 1)
+      else if(up_button.read() == 1)
       {
         buttonStatus = singlePressUp;
         vTaskDelay(200);
-        if(volumeUpButton.read() == 1)
+        if(up_button.read() == 1)
         {
-          while(volumeUpButton.read() == 1)
+          while(up_button.read() == 1)
           {
             // printf("\nup button is held\n");
             xSemaphoreGive(sem_held);
@@ -221,13 +221,13 @@ void ButtonReaderTask(void * pvParameters)
           xSemaphoreGive(sem_click);
         }
       }
-      else if(volumeDownButton.read() == 1)
+      else if(down_button.read() == 1)
       {
         buttonStatus = singlePressDown;
         vTaskDelay(200);
-        if(volumeDownButton.read() == 1)
+        if(down_button.read() == 1)
         {
-          while(volumeDownButton.read() == 1)
+          while(down_button.read() == 1)
           {
             // printf("\ndown button is held\n");
             xSemaphoreGive(sem_held);
@@ -270,7 +270,6 @@ void Control(void * pvParameters)
 
 int main(void)
 {
-    MP3_Handler handler;
     scheduler_add_task(new terminalTask(3));
     MP3.init(P2_7, P1_29, P1_23);
     interrupt.Initialize();
@@ -293,7 +292,7 @@ int main(void)
     xTaskCreate(View, "View", STACK_BYTES(2096), NULL, 1, NULL);
     xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 1, NULL);
     xTaskCreate(Player, "Player", STACK_BYTES(1048), NULL, 2, NULL);
-    xTaskCreate(ButtonReaderTask, "button", STACK_BYTES(1048), NULL, 2, NULL);
+    xTaskCreate(ButtonReaderTask, "Button", STACK_BYTES(1048), NULL, 2, NULL);
     scheduler_start();
     return -1;
 }
