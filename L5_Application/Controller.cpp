@@ -312,6 +312,7 @@ void Controller::menu_track_click(buttonList buttonStatus)
         std::cout << "Artist: " << *menu_artist_iterator << "Album: " << *menu_album_iterator << "Song: " << *menu_song_iterator << "\n" << std::endl;
         xSemaphoreGive(*sem_start_playback); //TODO Handle When song is currently playing !!!~!
         xSemaphoreGive(*sem_view_update);
+        std::cout << "SENT PLAYBACK SEMS\n" << std::endl;
     }
 }
 void Controller::volume_click(buttonList buttonStatus)
@@ -431,7 +432,6 @@ void Controller::playing_click(buttonList buttonStatus)
 
 bool Controller::end_of_song()
 {
-    std::cout << "END OF SONG" << std::endl;
     return handler.end_of_song();
 }
 

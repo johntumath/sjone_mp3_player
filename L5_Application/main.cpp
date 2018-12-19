@@ -72,7 +72,9 @@ void Reader(void* pvParameters)
     while (1)
     {
         //Wait for signal to start playback
+        std::cout << "WAITING FOR READER SEMEPHORE\n" << std::endl;
         while(xSemaphoreTake(sem_start_playback, portMAX_DELAY)!= pdTRUE);
+        std::cout << "READER SEMEPHORE TAKEN\n" << std::endl;
         while (!ctrl->end_of_song()){
             if (ctrl->is_stop_requested())
             {
@@ -81,6 +83,7 @@ void Reader(void* pvParameters)
             else if (!ctrl->is_paused())
             {
                 //Push music into Queue
+
                 xQueueSend(mp3Bytes, ctrl->get_next_block(), portMAX_DELAY);
             }
             else
@@ -294,7 +297,7 @@ int main(void)
     sem_click = xSemaphoreCreateBinary();
     sem_held = xSemaphoreCreateBinary();
     mp3Bytes = xQueueCreate(2, 512);
-    ctrl = new Controller(&sem_start_playback, &sem_view_update, &sem_held);
+    ctrl = new Controller(&sem_held, &sem_view_update, &sem_start_playback);
     xTaskCreate(Control, "Control", STACK_BYTES(2096), NULL, 3, NULL);
     xTaskCreate(View, "View", STACK_BYTES(2096), NULL, 1, NULL);
     xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 1, NULL);
