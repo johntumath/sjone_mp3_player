@@ -310,7 +310,6 @@ void Controller::menu_track_click(buttonList buttonStatus)
         view_state = playing;
         text_to_display = *current_song_iterator;
         std::cout << "Artist: " << *menu_artist_iterator << "Album: " << *menu_album_iterator << "Song: " << *menu_song_iterator << "\n" << std::endl;
-        for (int i = 0; i < 10000000000; i++){};
         xSemaphoreGive(*sem_start_playback); //TODO Handle When song is currently playing !!!~!
         xSemaphoreGive(*sem_view_update);
     }
