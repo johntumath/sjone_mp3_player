@@ -26,6 +26,7 @@ MP3_Handler::MP3_Handler()
 {
     //TODO:call load_song with first song on list to initialize current_track
     std::cout << "ENTERING MP3_HANDLER CONSTRUCTOR" << std::endl;
+    song_is_open = false;
     DIR directory;
     static FILINFO file_info;
     FRESULT res;
@@ -197,11 +198,12 @@ void MP3_Handler::load_song(struct mp3_meta file_meta)
 {
     std::string file_string("1:");
     file_string += get_file_name(file_meta);
+    std::cout << "LOAD SONG FILE META: " << file_string << std::endl;
 
     close_song();
-
+    std::cout << "After Close Song\n " << file_string << std::endl;
+    for (int i = 0; i < 10000000; i++){};
     f_open(&current_track.file, file_string.c_str(), FA_READ );
-    remove_meta_head();
     current_track.meta.artist = file_meta.artist;
     current_track.meta.album = file_meta.album;
     current_track.meta.song = file_meta.song;

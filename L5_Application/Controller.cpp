@@ -129,6 +129,9 @@ void Controller::startup_click(buttonList buttonStatus)
     // TODO Add splash
     // TODO Set the iterator to the top
 //    std::cout << handler.get_artist_list()[0] << std::endl;
+    current_artist_list = handler.get_artist_list();
+    menu_artist_iterator = current_artist_list.begin();
+    text_to_display = *menu_artist_iterator;
     view_state = menu_artist;
     // TODO Set menu_string to select the first artist in the vector
     // menu_string =
@@ -179,6 +182,7 @@ void Controller::menu_artist_click(buttonList buttonStatus)
        current_album_list = handler.get_album_list(*menu_artist_iterator);
        menu_album_iterator = current_album_list.begin();
        view_state = menu_album;
+       text_to_display = *menu_album_iterator;
    }
    else if (buttonStatus == singlePressCenter || buttonStatus == doublePressCenter)
    {
@@ -187,6 +191,7 @@ void Controller::menu_artist_click(buttonList buttonStatus)
        current_album_list = handler.get_album_list(*menu_artist_iterator);
        menu_album_iterator = current_album_list.begin();
        view_state = menu_album;
+       text_to_display = *menu_album_iterator;
    }
    //Left Click: Does nothing in this menu
    //TODO Left click might bring us back to Song Playing Menu
@@ -230,18 +235,22 @@ void Controller::menu_album_click(buttonList buttonStatus)
    }
    else if (buttonStatus == singlePressRight || buttonStatus == doublePressRight)
    {
+       std::cout << "RP inside ALBUM CLICK\n" << std::endl;
        // Go into that album's track list
+       std::cout << "Artist: " << *menu_artist_iterator << "Album: " << *menu_album_iterator << "\n" << std::endl;
        current_songs_list = handler.get_song_list(*menu_artist_iterator ,*menu_album_iterator);
-       menu_song_iterator = current_album_list.begin();
+       menu_song_iterator = current_songs_list.begin();
        view_state = menu_track;
        text_to_display = *menu_song_iterator;
    }
    else if (buttonStatus == singlePressCenter || buttonStatus == doublePressCenter)
    {
+       std::cout << "CenterClk inside ALBUM CLICK\n" << std::endl;
        //TODO Begin playback of all songs in the album's vector
        //TODO Currently just copy of press right
+       std::cout << "Artist: " << *menu_artist_iterator << "Album: " << *menu_album_iterator << "\n" << std::endl;
        current_songs_list = handler.get_song_list(*menu_artist_iterator ,*menu_album_iterator);
-       menu_song_iterator = current_album_list.begin();
+       menu_song_iterator = current_songs_list.begin();
        view_state = menu_track;
        text_to_display = *menu_song_iterator;
    }
@@ -249,7 +258,7 @@ void Controller::menu_album_click(buttonList buttonStatus)
 }
 void Controller::menu_track_click(buttonList buttonStatus)
 {
-    std::cout << "Entering Menu - Track " << std::endl;
+    std::cout << "Entering Menu - Track\n" << std::endl;
     if (buttonStatus == singlePressUp || buttonStatus == doublePressUp)
     {
         // Update menu display with the previous track in the vector
@@ -300,13 +309,15 @@ void Controller::menu_track_click(buttonList buttonStatus)
         handler.load_song(current_song);
         view_state = playing;
         text_to_display = *current_song_iterator;
+        std::cout << "Artist: " << *menu_artist_iterator << "Album: " << *menu_album_iterator << "Song: " << *menu_song_iterator << "\n" << std::endl;
+        for (int i = 0; i < 10000000000; i++){};
         xSemaphoreGive(*sem_start_playback); //TODO Handle When song is currently playing !!!~!
         xSemaphoreGive(*sem_view_update);
     }
 }
 void Controller::volume_click(buttonList buttonStatus)
 {
-    std::cout << "Entering Menu - Volume " << std::endl;
+    std::cout << "Entering Menu - Volume\n" << std::endl;
     if (buttonStatus == singlePressUp || buttonStatus ==  doublePressUp)
     {
         volume += VOLUME_DELTA_VALUE;
@@ -362,7 +373,7 @@ void Controller::volume_click(buttonList buttonStatus)
 }
 void Controller::playing_click(buttonList buttonStatus)
 {
-    std::cout << "Entering Playing_Click " << std::endl;
+    std::cout << "Entering Playing_Click\n" << std::endl;
     if (buttonStatus == singlePressUp || buttonStatus ==  doublePressUp)
     {
         volume += VOLUME_DELTA_VALUE;
@@ -472,6 +483,7 @@ void Controller::pause_click(buttonList buttonStatus)
 }
 void Controller::song_finished()
 {
+    std::cout << "SONG FINISHED" << std::endl;
     if(current_song_iterator != current_songs_list.end() &&
             ++current_song_iterator != current_songs_list.end()){
         struct mp3_meta current_song = handler.get_current_song();
