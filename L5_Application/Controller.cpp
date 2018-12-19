@@ -80,7 +80,7 @@ std::string Controller::get_text_to_display()
     return text_to_display;
 }
 
-int Controller::get_volume()
+uint8_t Controller::get_volume()
 {
     return volume;
 }
@@ -400,11 +400,32 @@ void Controller::playing_click(buttonList buttonStatus)
         view_state = volume_menu;
         xSemaphoreGive(*sem_view_update);
 
-        //TODO Update Volume for MP3 Decoder
     }
     else if (buttonStatus == singlePressLeft || buttonStatus ==  doublePressLeft)
     {
         //TODO Stop playing song, go back to track menu.
+        // Go to previous song
+        if(current_song_iterator != current_songs_list.begin())
+        {
+            --current_song_iterator;
+            struct mp3_meta current_song = handler.get_current_song();
+            current_song.song = *current_song_iterator;
+            handler.load_song(current_song);
+            view_state = playing;
+            text_to_display = *current_song_iterator;
+            xSemaphoreGive(*sem_start_playback);
+            xSemaphoreGive(*sem_view_update);
+        }
+        else
+        {
+            struct mp3_meta current_song = handler.get_current_song();
+            current_song.song = *current_song_iterator;
+            handler.load_song(current_song);
+            view_state = playing;
+            text_to_display = *current_song_iterator;
+            xSemaphoreGive(*sem_start_playback);
+            xSemaphoreGive(*sem_view_update);
+        }
     }
     else if (buttonStatus == singlePressRight || buttonStatus ==  doublePressRight)
     {
@@ -477,6 +498,10 @@ void Controller::pause_click(buttonList buttonStatus)
     else if (buttonStatus == singlePressCenter || buttonStatus == doublePressCenter)
     {
         //TODO Go back to play menu immediately
+            // Pause play back
+            pause = false;;
+            view_state = playing;
+            text_to_display = *menu_song_iterator;
     }
 
 }

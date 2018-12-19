@@ -97,6 +97,7 @@ void Player(void * pvParameters)
 {
     unsigned char playerBuffer[512];
     u_int8 *bufP;
+    u_int8 cvolume;
     while(1)
     {
         resetMP3();
@@ -104,6 +105,11 @@ void Player(void * pvParameters)
         {
             //Read off queue
             xQueueReceive(mp3Bytes, &playerBuffer, portMAX_DELAY);
+            if (cvolume != ctrl->get_volume())
+            {
+                cvolume = ctrl->get_volume();
+                MP3.setVolume(cvolume);
+            }
             bufP = playerBuffer;
             //Begin playing the block received
             if(MP3.DREQ->read()==0)

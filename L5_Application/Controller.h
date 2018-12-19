@@ -39,7 +39,7 @@ public:
     //Viewer Functions
     view_t get_view_state();
     std::string get_text_to_display();
-    int get_volume();
+    uint8_t get_volume();
     //Reader Functions
     bool is_paused();
     bool is_playing_song();
@@ -53,7 +53,7 @@ public:
     void song_finished();
     bool end_of_song();
 private:
-    int volume;
+    uint8_t volume;
     MP3_Handler handler;
     view_t view_state;
     std::string text_to_display;
