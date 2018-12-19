@@ -25,7 +25,7 @@ namespace{
 MP3_Handler::MP3_Handler()
 {
     //TODO:call load_song with first song on list to initialize current_track
-
+    std::cout << "ENTERING MP3_HANDLER CONSTRUCTOR" << std::endl;
     DIR directory;
     static FILINFO file_info;
     FRESULT res;
