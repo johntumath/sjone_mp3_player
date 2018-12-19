@@ -355,6 +355,17 @@ void Controller::pause_click(buttonList buttonStatus)
 }
 void Controller::song_finished()
 {
-    //TODO If no song is lined up, go back to main menu.
-    // If a song is lined up to play, begin playback.
+    if(current_song_iterator != current_songs_list.end() &&
+            ++current_song_iterator != current_songs_list.end()){
+        struct mp3_meta current_song = handler.get_current_song();
+        current_song.song = *current_song_iterator;
+        handler.load_song(current_song);
+        xSemaphoreGive(sem_start_playback);
+        xSemaphoreGive(sem_view_update);
+    }
+    else{
+        //TODO Handle being at the end of the album
+        view_state = menu_artist;
+        xSemaphoreGive(sem_view_update);
+    }
 }
