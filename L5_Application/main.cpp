@@ -254,8 +254,8 @@ void View(void * pvParameters)
     while(1)
     {
         // Wait for signal from controller to update the view.
-        while(xSemaphoreTake(sem_view_update, portMAX_DELAY)!= pdTRUE);
         VC.update_view();
+        while(xSemaphoreTake(sem_view_update, portMAX_DELAY)!= pdTRUE);
     }
 }
 

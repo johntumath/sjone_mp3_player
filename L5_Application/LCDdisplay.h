@@ -115,8 +115,8 @@
 #define ROW_WIDTH 16
 
 enum display_row{
-    bottom_row = 1,
-    top_row = 2
+    top_row = 1,
+    bottom_row = 2
 };
 
 inline display_row operator|(display_row lhs, display_row rhs)
