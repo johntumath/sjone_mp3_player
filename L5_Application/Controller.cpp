@@ -145,7 +145,7 @@ void Controller::menu_artist_click(buttonList buttonStatus)
        view_state = menu_artist;
    }
    std::cout <<"AFTER MENU ARTIST LOAD\n"<< std::endl;
-   if (buttonStatus == (singlePressUp || doublePressUp))
+   if (buttonStatus == singlePressUp || buttonStatus == doublePressUp)
    {
        //Update display with the previous artist in the vector
        if(menu_artist_iterator != current_artist_list.begin())
@@ -159,7 +159,7 @@ void Controller::menu_artist_click(buttonList buttonStatus)
        view_state = menu_artist;
        text_to_display = *menu_artist_iterator;
    }
-   else if (buttonStatus == (singlePressDown || doublePressDown))
+   else if (buttonStatus == singlePressDown || buttonStatus == doublePressDown)
    {
        // Update display with the next artist in the vector
        if(menu_artist_iterator != current_artist_list.end()-1)
@@ -173,14 +173,14 @@ void Controller::menu_artist_click(buttonList buttonStatus)
        view_state = menu_artist;
        text_to_display = *menu_artist_iterator;
    }
-   else if (buttonStatus == (singlePressRight || doublePressRight))
+   else if (buttonStatus == singlePressRight || buttonStatus == doublePressRight)
    {
        //Grab albums vector for selected artist, go to that menu
        current_album_list = handler.get_album_list(*menu_artist_iterator);
        menu_album_iterator = current_album_list.begin();
        view_state = menu_album;
    }
-   else if (buttonStatus == (singlePressCenter || doublePressCenter))
+   else if (buttonStatus == singlePressCenter || buttonStatus == doublePressCenter)
    {
        //TODO Begin playback of all songs in the artist's vector
        //TODO TEMP Repeat right press
@@ -194,7 +194,7 @@ void Controller::menu_artist_click(buttonList buttonStatus)
 void Controller::menu_album_click(buttonList buttonStatus)
 {
     std::cout << "Entering Menu - Album " << std::endl;
-   if (buttonStatus == (singlePressUp || doublePressUp))
+   if (buttonStatus == singlePressUp || buttonStatus == doublePressUp)
    {
        // Update display with the previous album in the vector
        if(menu_album_iterator != current_album_list.begin())
@@ -208,7 +208,7 @@ void Controller::menu_album_click(buttonList buttonStatus)
        view_state = menu_album;
        text_to_display = *menu_album_iterator;
    }
-   else if (buttonStatus == (singlePressDown || doublePressDown))
+   else if (buttonStatus == singlePressDown || buttonStatus == doublePressDown)
    {
        // Update display with the next artist in the vector
        if(menu_album_iterator != current_album_list.end()-1)
@@ -222,13 +222,13 @@ void Controller::menu_album_click(buttonList buttonStatus)
        view_state = menu_album;
        text_to_display = *menu_album_iterator;
    }
-   else if (buttonStatus == (singlePressLeft || doublePressLeft))
+   else if (buttonStatus == singlePressLeft || buttonStatus == doublePressLeft)
    {
        // Go back to artist menu
        view_state = menu_artist;
        text_to_display = *menu_artist_iterator;
    }
-   else if (buttonStatus == (singlePressRight || doublePressRight))
+   else if (buttonStatus == singlePressRight || buttonStatus == doublePressRight)
    {
        // Go into that album's track list
        current_songs_list = handler.get_song_list(*menu_artist_iterator ,*menu_album_iterator);
@@ -236,7 +236,7 @@ void Controller::menu_album_click(buttonList buttonStatus)
        view_state = menu_track;
        text_to_display = *menu_song_iterator;
    }
-   else if (buttonStatus == (singlePressCenter || doublePressCenter))
+   else if (buttonStatus == singlePressCenter || buttonStatus == doublePressCenter)
    {
        //TODO Begin playback of all songs in the album's vector
        //TODO Currently just copy of press right
@@ -250,7 +250,7 @@ void Controller::menu_album_click(buttonList buttonStatus)
 void Controller::menu_track_click(buttonList buttonStatus)
 {
     std::cout << "Entering Menu - Track " << std::endl;
-    if (buttonStatus == (singlePressUp || doublePressUp))
+    if (buttonStatus == singlePressUp || buttonStatus == doublePressUp)
     {
         // Update menu display with the previous track in the vector
         if(menu_song_iterator != current_songs_list.begin())
@@ -264,7 +264,7 @@ void Controller::menu_track_click(buttonList buttonStatus)
         view_state = menu_track;
         text_to_display = *menu_song_iterator;
     }
-    else if (buttonStatus == (singlePressDown || doublePressDown))
+    else if (buttonStatus == singlePressDown || buttonStatus == doublePressDown)
     {
         //TODO Update display with the next track in the vector
         if(menu_song_iterator != current_songs_list.end()-1)
@@ -278,13 +278,14 @@ void Controller::menu_track_click(buttonList buttonStatus)
         view_state = menu_track;
         text_to_display = *menu_song_iterator;
     }
-    else if (buttonStatus == (singlePressLeft || doublePressLeft))
+    else if (buttonStatus == singlePressLeft || buttonStatus == doublePressLeft)
     {
         //TODO Go back to album menu
         view_state = menu_album;
         text_to_display = *menu_album_iterator;
     }
-    else if (buttonStatus == (singlePressRight || doublePressRight|| singlePressCenter || doublePressCenter))
+    else if (buttonStatus == singlePressRight || buttonStatus == doublePressRight|| 
+              buttonStatus == singlePressCenter || buttonStatus ==doublePressCenter)
     {
 
         struct mp3_meta current_song;
@@ -305,8 +306,8 @@ void Controller::menu_track_click(buttonList buttonStatus)
 }
 void Controller::volume_click(buttonList buttonStatus)
 {
-    std::cout << "Entering Menu - Artist " << std::endl;
-    if (buttonStatus == (singlePressUp || doublePressUp))
+    std::cout << "Entering Menu - Volume " << std::endl;
+    if (buttonStatus == singlePressUp || buttonStatus ==  doublePressUp)
     {
         volume += VOLUME_DELTA_VALUE;
 
@@ -324,7 +325,7 @@ void Controller::volume_click(buttonList buttonStatus)
         //TODO Increase the volume by a certain percent and update display.
         // Wait a time to see if user pushes up/down again, then go back to play screen
     }
-    else if (buttonStatus == (singlePressDown || doublePressDown))
+    else if (buttonStatus == singlePressDown || buttonStatus ==  doublePressDown)
     {
         int new_volume = volume - VOLUME_DELTA_VALUE;
         if(new_volume > MIN_VOLUME)
@@ -340,19 +341,19 @@ void Controller::volume_click(buttonList buttonStatus)
         // TODO Decrease the volume by a certain percent and update display.
         // Wait a time to see if user pushes up/down again, then go back to play screen
     }
-    else if (buttonStatus == (singlePressLeft || doublePressLeft))
+    else if (buttonStatus == singlePressLeft || buttonStatus ==  doublePressLeft)
     {
         view_state = playing;
         xSemaphoreGive(*sem_view_update);
         //TODO Go back to play menu
     }
-    else if (buttonStatus == (singlePressRight || doublePressRight))
+    else if (buttonStatus == singlePressRight || buttonStatus ==  doublePressRight)
     {
         view_state = playing;
         xSemaphoreGive(*sem_view_update);
         //TODO Go back to play menu
     }
-    else if (buttonStatus == (singlePressCenter || doublePressCenter))
+    else if (buttonStatus == singlePressCenter || buttonStatus ==  doublePressCenter)
     {
         view_state = playing;
         xSemaphoreGive(*sem_view_update);
@@ -362,7 +363,7 @@ void Controller::volume_click(buttonList buttonStatus)
 void Controller::playing_click(buttonList buttonStatus)
 {
     std::cout << "Entering Playing_Click " << std::endl;
-    if (buttonStatus == (singlePressUp || doublePressUp))
+    if (buttonStatus == singlePressUp || buttonStatus ==  doublePressUp)
     {
         volume += VOLUME_DELTA_VALUE;
 
@@ -377,7 +378,7 @@ void Controller::playing_click(buttonList buttonStatus)
 
         //TODO Update Volume for MP3 Decoder
     }
-    else if (buttonStatus == (singlePressDown || doublePressDown))
+    else if (buttonStatus == singlePressDown || buttonStatus ==  doublePressDown)
     {
         int new_volume = volume - VOLUME_DELTA_VALUE;
         if(new_volume > MIN_VOLUME)
@@ -390,11 +391,11 @@ void Controller::playing_click(buttonList buttonStatus)
 
         //TODO Update Volume for MP3 Decoder
     }
-    else if (buttonStatus == (singlePressLeft || doublePressLeft))
+    else if (buttonStatus == singlePressLeft || buttonStatus ==  doublePressLeft)
     {
         //TODO Stop playing song, go back to track menu.
     }
-    else if (buttonStatus == (singlePressRight || doublePressRight))
+    else if (buttonStatus == singlePressRight || buttonStatus ==  doublePressRight)
     {
         // Go to next song
         if(current_song_iterator != current_songs_list.end() &&
@@ -409,7 +410,7 @@ void Controller::playing_click(buttonList buttonStatus)
             xSemaphoreGive(*sem_view_update);
         }
     }
-    else if (buttonStatus == (singlePressCenter || doublePressCenter))
+    else if (buttonStatus == singlePressCenter || buttonStatus == doublePressCenter)
     {
         // Pause play back
         pause = true;
@@ -426,7 +427,8 @@ bool Controller::end_of_song()
 
 void Controller::pause_click(buttonList buttonStatus)
 {
-    if (buttonStatus == (singlePressUp || doublePressUp))
+    std::cout << "Entering pause_Click " << std::endl;
+    if (buttonStatus == singlePressUp ||buttonStatus ==  doublePressUp)
     {
         volume += VOLUME_DELTA_VALUE;
 
@@ -441,7 +443,7 @@ void Controller::pause_click(buttonList buttonStatus)
 
         //TODO Update Volume for MP3 Decoder
     }
-    else if (buttonStatus == (singlePressDown || doublePressDown))
+    else if (buttonStatus == singlePressDown || buttonStatus == doublePressDown)
     {
         int new_volume = volume - VOLUME_DELTA_VALUE;
         if(new_volume > MIN_VOLUME)
@@ -454,15 +456,15 @@ void Controller::pause_click(buttonList buttonStatus)
 
         //TODO Update Volume for MP3 Decoder
     }
-    else if (buttonStatus == (singlePressLeft || doublePressLeft))
+    else if (buttonStatus == singlePressLeft || buttonStatus == doublePressLeft)
     {
         //TODO Go back to play menu
     }
-    else if (buttonStatus == (singlePressRight || doublePressRight))
+    else if (buttonStatus == singlePressRight || buttonStatus == doublePressRight)
     {
         //TODO Go back to play menu
     }
-    else if (buttonStatus == (singlePressCenter || doublePressCenter))
+    else if (buttonStatus == singlePressCenter || buttonStatus == doublePressCenter)
     {
         //TODO Go back to play menu immediately
     }
