@@ -9,8 +9,17 @@ bool is_meta_end(std::string meta_type);
 uint32_t mp3_get_length(std::string meta_length);
 bool is_mp3(std::string filename);
 void PrintFileReadError(FRESULT res);
-
+std::string get_truncated_string(std::string extended_str);
+std::string ucs2_to_string(std::string ucs_str);
 /*** Aux. Func. End ***/
+
+namespace{
+    const int ID3V2_HEADER_SIZE = 10;
+    const int ID3_TAG_META_SIZE = 30;
+    const int ID3_TAG_DATA_SIZE = ID3_TAG_META_SIZE * 3; //(3): Artist, Album, Song
+    const int ID3_EX_TAG_META_SIZE = 60;
+    const int ID3_EX_TAG_DATA_SIZE = ID3_EX_TAG_META_SIZE * 3; //(3): Artist, Album, Song
+}
 
 
 MP3_Handler::MP3_Handler()
@@ -36,7 +45,7 @@ MP3_Handler::MP3_Handler()
                 struct mp3_meta current_song = get_mp3_meta(LF_name);
                 songs[current_song.artist][current_song.album][current_song.song]=LF_name;
                 //Remove this print statement once debugging is done
-                std::cout << "Song: " << current_song.song.c_str() << " Artist: " << current_song.artist << " Album: " << current_song.album << std::endl;
+                std::cout << "Song: " << current_song.song << " Artist: " << current_song.artist << " Album: " << current_song.album << std::endl;
             }
             LF_name.resize(150);
         }
@@ -49,71 +58,112 @@ struct mp3_meta MP3_Handler::get_mp3_meta(std::string mp3_file)
 {
     FIL mp3_finfo;
     struct mp3_meta meta_return;
-    std::string  meta_head, frame_head, meta_body, frame_body;
+    std::string  meta_head, frame_head, meta_body, frame_body, frame_type;
+    std::wstring wframe_body;
     uint32_t meta_size, frame_size;
     uint bytes_read;
-    meta_return.album="Unknown";
-    meta_return.artist="Unknown";
+
+    /* Set default values for missing meta */
+    meta_return.album="Unknown Album";
+    meta_return.artist="Unknown Artist";
     meta_return.song = std::string(mp3_file.begin(), mp3_file.begin() + mp3_file.find('\0'));
+
+    /* Add Directory and open file */
     mp3_file = "1:" + mp3_file;
     FRESULT res = f_open(&mp3_finfo, mp3_file.c_str(), FA_READ);
     if (res != 0){
         PrintFileReadError (res);
         std::cout << "Filename was: " << mp3_file << std::endl;
     }
-    meta_head.resize(11);
-    res = f_read(&mp3_finfo, static_cast<void*>(&meta_head[0]), 3, &bytes_read);
+
+    meta_head.resize(ID3V2_HEADER_SIZE);
+    res = f_read(&mp3_finfo, static_cast<void*>(&meta_head[0]), ID3V2_HEADER_SIZE, &bytes_read);
 
     if(meta_head.substr(0,3) == "ID3"){
+        uint8_t text_type;
         bool all_meta_found=false, song_found=false, artist_found=false, album_found=false;
         std::string::iterator clear_buffer;
-        res = f_read(&mp3_finfo, static_cast<void*>(&meta_head[3]), 7, &bytes_read);
         meta_size = mp3_get_length(meta_head.substr(6,9));
-        if (meta_size > 32000)
-        {
-            return meta_return;
-        }
-        meta_body.resize(meta_size);
-        res = f_read(&mp3_finfo, static_cast<void*>(&meta_body[0]), meta_size, &bytes_read);
-        if (res != 0){
-            std::cout << "Error reading file before DO: " << mp3_file << std::endl;
-            PrintFileReadError(res);
-        }
-        do{
-            frame_head = meta_body.substr(0,10);
+        frame_head.resize(ID3V2_HEADER_SIZE);
+        frame_body.resize(50);//--------------------------delete this
+
+        while(!all_meta_found && mp3_finfo.fptr < meta_size + 10){
+            res = f_read(&mp3_finfo, static_cast<void*>(&frame_head[0]), ID3V2_HEADER_SIZE, &bytes_read);
             frame_size = mp3_get_length(frame_head.substr(4,7));
-            if (frame_size > 50)
-            {
-                std::cout << "Frame size too large: " << frame_size << std::endl;
-            }
-            else
-            {
-                frame_body.resize(frame_size);
-                frame_body = meta_body.substr(10,frame_size);
-                //clear buffer \0 from front of frame body so they are not mistaken for eof
-                for(clear_buffer=frame_body.begin(); (*clear_buffer)== '\000'; ++clear_buffer);
-            }
+            frame_type = frame_head.substr(0,4);
             if(frame_head.substr(0,4) == "TIT2"){
+                res = f_read(&mp3_finfo, static_cast<void*>(&text_type), 1, &bytes_read);
+                if(text_type == 0){
+                    meta_return.song.resize(frame_size);
+                    res = f_read(&mp3_finfo, static_cast<void*>(&meta_return.song[0]), frame_size-1, &bytes_read);
+                }
+                else if(text_type == 1){
+                    frame_body.resize(frame_size-1);
+                    res = f_read(&mp3_finfo, static_cast<void*>(&frame_body[0]), frame_size-1, &bytes_read);
+                    meta_return.song = ucs2_to_string(frame_body);
+                }
                 song_found = true;
-                meta_return.song = std::string(clear_buffer,frame_body.end());
                 if(artist_found && album_found) all_meta_found=true;
             }
             else if (frame_head.substr(0,4) == "TPE1"){
+                res = f_read(&mp3_finfo, static_cast<void*>(&text_type), 1, &bytes_read);
+                if(text_type == 0){
+                    meta_return.artist.resize(frame_size);
+                    res = f_read(&mp3_finfo, static_cast<void*>(&meta_return.artist[0]), frame_size-1, &bytes_read);
+                }
+                else if(text_type == 1){
+                    frame_body.resize(frame_size-1);
+                    res = f_read(&mp3_finfo, static_cast<void*>(&frame_body[0]), frame_size-1, &bytes_read);
+                    meta_return.artist = ucs2_to_string(frame_body);
+                }
                 artist_found =true;
-                meta_return.artist = std::string(clear_buffer,frame_body.end());
                 if(song_found && album_found) all_meta_found=true;
             }
             else if (frame_head.substr(0,4) == "TALB"){
+                res = f_read(&mp3_finfo, static_cast<void*>(&text_type), 1, &bytes_read);
+                if(text_type == 0){
+                    meta_return.album.resize(frame_size);
+                    res = f_read(&mp3_finfo, static_cast<void*>(&meta_return.album[0]), frame_size-1, &bytes_read);
+                }
+                else if(text_type == 1){
+                    frame_body.resize(frame_size-1);
+                    res = f_read(&mp3_finfo, static_cast<void*>(&frame_body[0]), frame_size-1, &bytes_read);
+                    meta_return.album = ucs2_to_string(frame_body);
+                }
                 album_found = true;
-                meta_return.album = std::string(clear_buffer,frame_body.end());
                 if(song_found && artist_found) all_meta_found=true;
             }
-
-            meta_body.erase(0,frame_size+10);
-        }while(!meta_body.empty() && !is_meta_end(frame_head.substr(0,4)) && !all_meta_found);
+            else{
+                /* Skip Unwanted Frame */
+                if(*(uint32_t*)frame_head.substr(0,4).c_str()==0){
+                    f_lseek(&mp3_finfo, meta_size + 10);
+                }
+                else {
+                    f_lseek(&mp3_finfo, mp3_finfo.fptr + frame_size);
+                }
+            }
+        }
     }
-    else if(meta_head.substr(0,3) == "TAG"){
-        //TODO: Handle version 1 Tag and Tag+ metadata headers
+    else{
+        f_lseek(&mp3_finfo, mp3_finfo.fsize-128);
+        meta_body.resize(95);
+        f_read(&mp3_finfo, static_cast<void*>(&meta_body[0]), 93, &bytes_read);
+        if(meta_body.substr(0,3)=="TAG"){
+            meta_return.song = get_truncated_string(meta_body.substr(3,30));
+            meta_return.artist = get_truncated_string(meta_body.substr(33,30));
+            meta_return.album = get_truncated_string(meta_body.substr(63,30));
+        }
+        else{
+            f_lseek(&mp3_finfo, mp3_finfo.fsize-227);
+            meta_body.resize(190);
+            f_read(&mp3_finfo, static_cast<void*>(&meta_body[0]), 184, &bytes_read);
+            if(meta_body.substr(0,4)=="TAG+"){
+                meta_return.song = get_truncated_string(meta_body.substr(4,60));
+                meta_return.artist = get_truncated_string(meta_body.substr(64,30));
+                meta_return.album = get_truncated_string(meta_body.substr(124,30));
+            }
+        }
+
     }
     f_close(&mp3_finfo);
     return meta_return;
@@ -332,6 +382,40 @@ bool is_mp3(std::string filename){
     extension[0] = tolower(extension[0]);
     extension[1] = tolower(extension[1]);
     return extension == "mp3" ;
+}
+
+std::string ucs2_to_string(std::string ucs_str){
+    std::string endianness = ucs_str.substr(0,2);
+    std::string return_str;
+
+    return_str.resize(ucs_str.size()/2);
+
+//    return_str += ucs_str[0]>>16;
+    if(*(uint16_t*)(endianness.c_str()) == 0xFFFE){
+        std::cout<< "big endian" << std::endl;
+        for(uint16_t i=2; i < ucs_str.size() ; i+=1){
+            if(i%2==1)
+                return_str += ucs_str[i];
+        }
+        //TODO: handle in this endian
+    }
+    else if (*(uint16_t*)(endianness.c_str()) == 0xFEFF){
+        std::cout<< "little endian" << std::endl;
+        for(uint16_t i=2; i < ucs_str.size() ; i+=1){
+            if(i%2==0)
+                return_str += ucs_str[i];
+        }
+    }
+    else{
+        std::cout<< "???? endian    " << endianness << std::endl;
+    }
+    return return_str;
+}
+
+std::string get_truncated_string(std::string extended_str){
+    size_t end = extended_str.find('\0');
+    std::string truncated_string(extended_str.begin(), extended_str.begin() + end);
+    return truncated_string;
 }
 
 
