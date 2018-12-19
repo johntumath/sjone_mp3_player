@@ -85,7 +85,6 @@ struct mp3_meta MP3_Handler::get_mp3_meta(std::string mp3_file)
         std::string::iterator clear_buffer;
         meta_size = mp3_get_length(meta_head.substr(6,9));
         frame_head.resize(ID3V2_HEADER_SIZE);
-        frame_body.resize(50);//--------------------------delete this
 
         while(!all_meta_found && mp3_finfo.fptr < meta_size + 10){
             res = f_read(&mp3_finfo, static_cast<void*>(&frame_head[0]), ID3V2_HEADER_SIZE, &bytes_read);
