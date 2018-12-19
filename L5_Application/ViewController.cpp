@@ -41,7 +41,7 @@ void ViewController::update_view(void)
             break;
         case volume_menu:
             top_row_text = "Volume:";
-            bottom_row_text = control_ptr->get_volume();
+            bottom_row_text = std::string(((control_ptr->get_volume()/100.0)*16), '\0');
             transmit_to_LCD();
             break;
         case playing:
