@@ -72,9 +72,8 @@ void Reader(void* pvParameters)
     while (1)
     {
         //Wait for signal to start playback
-        std::cout << "WAITING FOR READER SEMEPHORE\n" << std::endl;
         while(xSemaphoreTake(sem_start_playback, portMAX_DELAY)!= pdTRUE);
-        std::cout << "READER SEMEPHORE TAKEN\n" << std::endl;
+        xQueueSend(mp3Bytes, ctrl->get_next_block(), portMAX_DELAY);
         while (!ctrl->end_of_song()){
             if (ctrl->is_stop_requested())
             {
@@ -83,7 +82,6 @@ void Reader(void* pvParameters)
             else if (!ctrl->is_paused())
             {
                 //Push music into Queue
-
                 xQueueSend(mp3Bytes, ctrl->get_next_block(), portMAX_DELAY);
             }
             else

@@ -199,11 +199,9 @@ void MP3_Handler::load_song(struct mp3_meta file_meta)
     std::string file_string("1:");
     file_string += get_file_name(file_meta);
     std::cout << "LOAD SONG FILE META: " << file_string << std::endl;
-
     close_song();
     std::cout << "After Close Song\n " << file_string << std::endl;
-    for (int i = 0; i < 10000000; i++){};
-    f_open(&current_track.file, file_string.c_str(), FA_READ );
+    PrintFileReadError(f_open(&current_track.file, file_string.c_str(), FA_READ ));
     current_track.meta.artist = file_meta.artist;
     current_track.meta.album = file_meta.album;
     current_track.meta.song = file_meta.song;
@@ -248,7 +246,8 @@ void MP3_Handler::load_prev_song()
 
 void MP3_Handler::get_next_audio()
 {
-    f_read(&current_track.file, mp3bytes, 512, &current_track.bytes_read);
+    FRESULT res = f_read(&current_track.file, mp3bytes, 512, &current_track.bytes_read);
+    if(res != 0) PrintFileReadError(res);
 }
 
 bool MP3_Handler::end_of_song()
