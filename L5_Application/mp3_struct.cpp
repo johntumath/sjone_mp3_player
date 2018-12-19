@@ -44,7 +44,8 @@ MP3_Handler::MP3_Handler()
             }
             if(is_mp3(LF_name)){
                 struct mp3_meta current_song = get_mp3_meta(LF_name);
-                songs[current_song.artist][current_song.album][current_song.song]=LF_name;
+                size_t end = LF_name.find('\0');
+                songs[current_song.artist][current_song.album][current_song.song]=LF_name.substr(0,end);
                 //Remove this print statement once debugging is done
                 std::cout << "Song: " << current_song.song << " Artist: " << current_song.artist << " Album: " << current_song.album << std::endl;
             }
@@ -201,7 +202,11 @@ void MP3_Handler::load_song(struct mp3_meta file_meta)
     std::cout << "LOAD SONG FILE META: " << file_string << std::endl;
     close_song();
     std::cout << "After Close Song\n " << file_string << std::endl;
+<<<<<<< HEAD
+    f_open(&current_track.file, file_string.c_str(), FA_READ );
+=======
     PrintFileReadError(f_open(&current_track.file, file_string.c_str(), FA_READ ));
+>>>>>>> d451deed1f8db83c7fbcddd96f8bc9fa4aa1570d
     current_track.meta.artist = file_meta.artist;
     current_track.meta.album = file_meta.album;
     current_track.meta.song = file_meta.song;

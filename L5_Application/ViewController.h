@@ -17,6 +17,7 @@ class ViewController {
 public:
     ViewController(Controller*);
     void update_view(void);
+    void shift_rows();
 private:
     void transmit_to_LCD();
     Controller* control_ptr;

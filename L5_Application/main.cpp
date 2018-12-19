@@ -258,12 +258,20 @@ void ButtonReaderTask(void * pvParameters)
 
 void View(void * pvParameters)
 {
+    const uint16_t SHIFT_DELAY = 1500;
     ViewController VC(ctrl);
+    VC.update_view();
     while(1)
     {
         // Wait for signal from controller to update the view.
-        VC.update_view();
-        while(xSemaphoreTake(sem_view_update, portMAX_DELAY)!= pdTRUE);
+        if(xSemaphoreTake(sem_view_update, SHIFT_DELAY)== pdTRUE){
+            std::cout<<"update"<<std::endl;
+            VC.update_view();
+        }
+        else{
+            std::cout<<"shift"<<std::endl;
+            VC.shift_rows();
+        }
     }
 }
 
