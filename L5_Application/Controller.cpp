@@ -203,17 +203,26 @@ void Controller::menu_album_click(buttonList buttonStatus)
    }
    else if (buttonStatus == (singlePressLeft || doublePressLeft))
    {
-       //TODO Go back to artist menu
+       // Go back to artist menu
        view_state = menu_artist;
        text_to_display = *menu_artist_iterator;
    }
    else if (buttonStatus == (singlePressRight || doublePressRight))
    {
-       //TODO Go into that album's track list
+       // Go into that album's track list
+       current_songs_list = handler.get_song_list(*menu_artist_iterator ,*menu_album_iterator);
+       menu_song_iterator = current_album_list.begin();
+       view_state = menu_track;
+       text_to_display = *menu_song_iterator;
    }
    else if (buttonStatus == (singlePressCenter || doublePressCenter))
    {
        //TODO Begin playback of all songs in the album's vector
+       //TODO Currently just copy of press right
+       current_songs_list = handler.get_song_list(*menu_artist_iterator ,*menu_album_iterator);
+       menu_song_iterator = current_album_list.begin();
+       view_state = menu_track;
+       text_to_display = *menu_song_iterator;
    }
 
 }
@@ -221,15 +230,37 @@ void Controller::menu_track_click(buttonList buttonStatus)
 {
     if (buttonStatus == (singlePressUp || doublePressUp))
     {
-        //TODO Update menu display with the previous track in the vector
+        // Update menu display with the previous track in the vector
+        if(menu_song_iterator != current_songs_list.begin())
+        {
+            menu_song_iterator--;
+        }
+        else
+        {
+            menu_song_iterator = current_songs_list.end();
+        }
+        view_state = menu_track;
+        text_to_display = *menu_song_iterator;
     }
     else if (buttonStatus == (singlePressDown || doublePressDown))
     {
         //TODO Update display with the next track in the vector
+        if(menu_song_iterator != current_songs_list.end())
+        {
+            menu_song_iterator++;
+        }
+        else
+        {
+            menu_song_iterator = current_songs_list.begin();
+        }
+        view_state = menu_track;
+        text_to_display = *menu_song_iterator;
     }
     else if (buttonStatus == (singlePressLeft || doublePressLeft))
     {
         //TODO Go back to album menu
+        view_state = menu_album;
+        text_to_display = *menu_album_iterator;
     }
     else if (buttonStatus == (singlePressRight || doublePressRight|| singlePressCenter || doublePressCenter))
     {
@@ -273,21 +304,21 @@ void Controller::playing_click(buttonList buttonStatus)
         // TODO Decrease the volume by a certain percent and update display.
         // Wait a time to see if user pushes up/down again, then go back to play screen
     }
-    else if (buttonStatus == (singlePressLeft))
+    else if (buttonStatus == (singlePressLeft || doublePressLeft))
     {
-        //TODO Go back to beginning of song
-    }
-    else if (buttonStatus == (doublePressLeft))
-    {
-        //TODO Start play back of previous song
+        //TODO Stop playing song, go back to track menu.
     }
     else if (buttonStatus == (singlePressRight || doublePressRight))
     {
         //TODO Go to next song
+
     }
     else if (buttonStatus == (singlePressCenter || doublePressCenter))
     {
-        //TODO Pause play back
+        // Pause play back
+        pause = true;
+        view_state = paused;
+        text_to_display = *menu_song_iterator;
     }
 }
 
