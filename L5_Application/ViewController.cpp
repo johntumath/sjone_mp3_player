@@ -20,7 +20,7 @@ void ViewController::update_view(void)
     switch(control_ptr->get_view_state())
     {
         case startup:
-            top_row_text = "QUICK AND DIRTY!!!!!!!!!!!!!!!!!!!!!";
+            top_row_text = "QUICK AND DIRTY";
             bottom_row_text = "MP3 PLAYER";
             transmit_to_LCD();
             break;
