@@ -66,7 +66,8 @@ private:
 
     enum {single_song, entire_album, all_songs_by_artist} playlist;
     bool playing_song, pause, stop_playback; //status flags
-    std::vector<std::string>::iterator artist_iterator, album_iterator, song_iterator;
+    std::vector<std::string>::iterator menu_artist_iterator, menu_album_iterator, menu_song_iterator;
+    std::vector<std::string>::iterator current_artist_iterator, current_album_iterator, current_song_iterator;
     std::vector<std::string> current_artist_list, current_album_list, current_songs_list;
     void startup_click(buttonList);
     void menu_artist_click(buttonList);
