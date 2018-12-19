@@ -82,13 +82,9 @@ void Reader(void* pvParameters)
                 //Push music into Queue
                 xQueueSend(mp3Bytes, ctrl.get_next_block(), portMAX_DELAY);
             }
-            else if (ctrl.is_paused())
-            {
-                vTaskDelay(10);
-            }
             else
             {
-                break;
+                vTaskDelay(10);
             }
         }
         ctrl.song_finished();
