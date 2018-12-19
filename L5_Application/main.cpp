@@ -28,7 +28,7 @@ LabGpioInterrupts interrupt;
 QueueHandle_t mp3Bytes;
 SemaphoreHandle_t sem_start_playback, sem_dreq_high, sem_btn, sem_click, sem_held, sem_view_update;
 SoftTimer debouncer(200);
-Controller ctrl(&sem_start_playback, &sem_view_update, &sem_held);
+Controller *ctrl;
 volatile buttonList buttonStatus;
 
 void Eint3Handler(void)
@@ -73,22 +73,22 @@ void Reader(void* pvParameters)
     {
         //Wait for signal to start playback
         while(xSemaphoreTake(sem_start_playback, portMAX_DELAY)!= pdTRUE);
-        while (!ctrl.end_of_song()){
-            if (ctrl.is_stop_requested())
+        while (!ctrl->end_of_song()){
+            if (ctrl->is_stop_requested())
             {
                 break;
             }
-            else if (!ctrl.is_paused())
+            else if (!ctrl->is_paused())
             {
                 //Push music into Queue
-                xQueueSend(mp3Bytes, ctrl.get_next_block(), portMAX_DELAY);
+                xQueueSend(mp3Bytes, ctrl->get_next_block(), portMAX_DELAY);
             }
             else
             {
                 vTaskDelay(10);
             }
         }
-        ctrl.song_finished();
+        ctrl->song_finished();
     }
 }
 
@@ -251,7 +251,7 @@ void ButtonReaderTask(void * pvParameters)
 void View(void * pvParameters)
 {
     std::cout << "in view" << std::endl;
-    ViewController VC(&ctrl);
+    ViewController VC(ctrl);
     std::cout << "Exit view constructor" << std::endl;
     while(1)
     {
@@ -270,7 +270,7 @@ void Control(void * pvParameters)
     {
         // Wait for signal from button task.
         while(xSemaphoreTake(sem_click, portMAX_DELAY)!= pdTRUE);
-        ctrl.on_click(buttonStatus);
+        ctrl->on_click(buttonStatus);
     }
 }
 
@@ -294,6 +294,7 @@ int main(void)
     sem_click = xSemaphoreCreateBinary();
     sem_held = xSemaphoreCreateBinary();
     mp3Bytes = xQueueCreate(2, 512);
+    ctrl = new Controller(&sem_start_playback, &sem_view_update, &sem_held);
     xTaskCreate(Control, "Control", STACK_BYTES(2096), NULL, 3, NULL);
     xTaskCreate(View, "View", STACK_BYTES(2096), NULL, 1, NULL);
     xTaskCreate(Reader, "Reader", STACK_BYTES(2096), NULL, 1, NULL);
