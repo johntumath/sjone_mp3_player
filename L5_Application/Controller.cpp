@@ -133,7 +133,7 @@ void Controller::menu_artist_click(buttonList buttonStatus)
        {
            artist_iterator--;
        }
-       else (artist_iterator == current_artist_list.begin())
+       else
        {
            artist_iterator = current_artist_list.end();
        }
