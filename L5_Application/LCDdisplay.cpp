@@ -83,11 +83,10 @@ bool LCD_display::init()
 
 void LCD_display::refresh_screen(){
     position_cursor(0,0);
-
-    write_str(create_full_row_string(bottom_row_text));
+    write_str(create_full_row_string(top_row_text));
 
     position_cursor(1,0);
-    write_str(create_full_row_string(top_row_text));
+    write_str(create_full_row_string(bottom_row_text));
 }
 
 void LCD_display::send_short_setting(uint8_t setting)
