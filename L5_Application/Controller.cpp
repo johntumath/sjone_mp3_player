@@ -310,8 +310,18 @@ void Controller::playing_click(buttonList buttonStatus)
     }
     else if (buttonStatus == (singlePressRight || doublePressRight))
     {
-        //TODO Go to next song
-
+        // Go to next song
+        if(current_song_iterator != current_songs_list.end() &&
+                    ++current_song_iterator != current_songs_list.end())
+        {
+            struct mp3_meta current_song = handler.get_current_song();
+            current_song.song = *current_song_iterator;
+            handler.load_song(current_song);
+            view_state = playing;
+            text_to_display = *current_song_iterator;
+            xSemaphoreGive(sem_start_playback);
+            xSemaphoreGive(sem_view_update);
+        }
     }
     else if (buttonStatus == (singlePressCenter || doublePressCenter))
     {
