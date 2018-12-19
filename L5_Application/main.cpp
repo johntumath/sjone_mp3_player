@@ -145,7 +145,7 @@ void ButtonReaderTask(void * pvParameters)
       if(left_button.read() == 1)
       {
         buttonStatus = singlePressLeft;
-        vTaskDelay(200);
+        vTaskDelay(350);
         if(left_button.read() == 1)
         {
           while(left_button.read() == 1)
@@ -165,7 +165,7 @@ void ButtonReaderTask(void * pvParameters)
       else if(center_button.read() == 1)
       {
         buttonStatus = singlePressCenter;
-        vTaskDelay(200);
+        vTaskDelay(350);
         if(center_button.read() == 1)
         {
           while(center_button.read() == 1)
@@ -185,7 +185,7 @@ void ButtonReaderTask(void * pvParameters)
       else if(right_button.read() == 1)
       {
         buttonStatus = singlePressRight;
-        vTaskDelay(200);
+        vTaskDelay(350);
         if(right_button.read() == 1)
         {
           while(right_button.read() == 1)
@@ -205,7 +205,7 @@ void ButtonReaderTask(void * pvParameters)
       else if(up_button.read() == 1)
       {
         buttonStatus = singlePressUp;
-        vTaskDelay(200);
+        vTaskDelay(350);
         if(up_button.read() == 1)
         {
           while(up_button.read() == 1)
@@ -225,7 +225,7 @@ void ButtonReaderTask(void * pvParameters)
       else if(down_button.read() == 1)
       {
         buttonStatus = singlePressDown;
-        vTaskDelay(200);
+        vTaskDelay(350);
         if(down_button.read() == 1)
         {
           while(down_button.read() == 1)
@@ -245,6 +245,7 @@ void ButtonReaderTask(void * pvParameters)
       vTaskDelay(50);
       debouncer.reset();
     }
+    // printf("\nButton Status%d\n", buttonStatus);
   }
 }
 
