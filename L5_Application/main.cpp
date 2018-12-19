@@ -171,17 +171,20 @@ void ButtonReaderTask(void * pvParameters)
       }
       else if(center_button.read() == 1)
       {
+        bool isitheld = false;
         buttonStatus = singlePressCenter;
         vTaskDelay(350);
         if(center_button.read() == 1)
         {
           while(center_button.read() == 1)
           {
-             printf("\ncenter button is held\n");
+              isitheld = true;
+              printf("\ncenter button is held\n");
             buttonStatus = heldCenter;
             xSemaphoreGive(sem_held);
             vTaskDelay(50);
           }
+          if (isitheld) xSemaphoreGive(sem_click);
         }
         else
         {

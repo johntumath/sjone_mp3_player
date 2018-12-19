@@ -378,6 +378,7 @@ void Controller::volume_click(buttonList buttonStatus)
 void Controller::playing_click(buttonList buttonStatus)
 {
     std::cout << "Entering Playing_Click\n" << std::endl;
+
     if (buttonStatus == singlePressUp || buttonStatus ==  doublePressUp)
     {
         volume += VOLUME_DELTA_VALUE;
@@ -393,6 +394,14 @@ void Controller::playing_click(buttonList buttonStatus)
 
         //TODO Update Volume for MP3 Decoder
     }
+    else if (buttonStatus == heldCenter)
+    {
+        //HOLD TO MENU
+        current_artist_list = handler.get_artist_list();
+        menu_artist_iterator = current_artist_list.begin();
+        text_to_display = *menu_artist_iterator;
+        view_state = menu_artist;
+    }
     else if (buttonStatus == singlePressDown || buttonStatus ==  doublePressDown)
     {
         int new_volume = volume - VOLUME_DELTA_VALUE;
@@ -405,7 +414,7 @@ void Controller::playing_click(buttonList buttonStatus)
         xSemaphoreGive(*sem_view_update);
 
     }
-    else if (buttonStatus == heldLeft)
+    else if (buttonStatus == heldLeft || buttonStatus == heldCenter)
     {
 
     }
