@@ -9,6 +9,7 @@
 #define CONTROLLER_H_
 
 #include <string.h>
+#include <map>
 #include <mp3_struct.h>
 #include "semphr.h"
 
@@ -37,7 +38,7 @@ public:
     Controller(SemaphoreHandle_t*, SemaphoreHandle_t*, SemaphoreHandle_t*);
     //Viewer Functions
     view_t get_view_state();
-    std::string get_menu_string();
+    std::string get_text_to_display();
     int get_volume();
     //Reader Functions
     bool is_paused();
@@ -55,7 +56,7 @@ private:
     int volume;
     MP3_Handler handler;
     view_t view_state;
-    std::string menu_string;
+    std::string text_to_display;
 
     //    sem_hold = incoming signal from button task, alerting when button is being held
     //    sem_view_update = outgoing signal to alert the view task to refresh
@@ -65,6 +66,8 @@ private:
 
     enum {single_song, entire_album, all_songs_by_artist} playlist;
     bool playing_song, pause, stop_playback; //status flags
+    std::vector<std::string>::iterator artist_iterator, album_iterator, song_iterator;
+    std::vector<std::string> current_artist_list, current_album_list, current_songs_list;
     void startup_click(buttonList);
     void menu_artist_click(buttonList);
     void menu_album_click(buttonList);

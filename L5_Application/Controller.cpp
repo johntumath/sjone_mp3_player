@@ -68,9 +68,9 @@ std::string Controller::get_current_track()
     return songinfo.song;
 }
 
-std::string Controller::get_menu_string()
+std::string Controller::get_text_to_display()
 {
-    return menu_string;
+    return text_to_display;
 }
 
 int Controller::get_volume()
@@ -120,32 +120,77 @@ void Controller::startup_click(buttonList buttonStatus)
 }
 void Controller::menu_artist_click(buttonList buttonStatus)
 {
+   if (current_artist_list.empty())
+   {
+       current_artist_list = handler.get_artist_list();
+       artist_iterator = current_artist_list.begin();
+       text_to_display = *artist_iterator;
+   }
    if (buttonStatus == (singlePressUp || doublePressUp))
    {
-       //TODO Update display with the previous artist in the vector
+       //Update display with the previous artist in the vector
+       if(artist_iterator != current_artist_list.begin())
+       {
+           artist_iterator--;
+       }
+       else (artist_iterator == current_artist_list.begin())
+       {
+           artist_iterator = current_artist_list.end();
+       }
+       view_state = menu_artist;
+       text_to_display = *artist_iterator;
    }
    else if (buttonStatus == (singlePressDown || doublePressDown))
    {
-       //TODO Update display with the next artist in the vector
-
+       // Update display with the next artist in the vector
+       if(artist_iterator != current_artist_list.begin())
+       {
+           artist_iterator++;
+       }
+       else if(artist_iterator == current_artist_list.end()){
+           artist_iterator = current_artist_list.begin();
+       }
+       else
+       {
+           artist_iterator = current_artist_list.begin();
+       }
+       view_state = menu_artist;
    }
    else if (buttonStatus == (singlePressRight || doublePressRight))
    {
-       //TODO Grab albums vector for selected artist, go to that menu
-
+       //Grab albums vector for selected artist, go to that menu
+       current_album_list = handler.get_album_list(*artist_iterator);
+       album_iterator = current_album_list.begin();
+       view_state = menu_album;
    }
    else if (buttonStatus == (singlePressCenter || doublePressCenter))
    {
        //TODO Begin playback of all songs in the artist's vector
+       //TODO TEMP Repeat right press
+       current_album_list = handler.get_album_list(*artist_iterator);
+       album_iterator = current_album_list.begin();
+       view_state = menu_album;
    }
    //Left Click: Does nothing in this menu
-
 }
 void Controller::menu_album_click(buttonList buttonStatus)
 {
    if (buttonStatus == (singlePressUp || doublePressUp))
    {
        //TODO Update display with the previous album in the vector
+       if(album_iterator != current_album_list.begin())
+       {
+           artist_iterator--;
+       }
+       else if(album_iterator == current_artist_list.begin()){
+           album_iterator = current_artist_list.end();
+       }
+       else
+       {
+           album_iterator = current_artist_list.begin();
+       }
+       view_state = menu_artist;
+       text_to_display = *album_iterator;
    }
    else if (buttonStatus == (singlePressDown || doublePressDown))
    {

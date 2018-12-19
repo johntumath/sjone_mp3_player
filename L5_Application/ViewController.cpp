@@ -25,17 +25,17 @@ void ViewController::update_view(void)
             break;
         case menu_artist:
             top_row_text = "Artist:";
-            bottom_row_text = control_ptr->get_menu_string();
+            bottom_row_text = control_ptr->get_text_to_display();
             transmit_to_LCD();
             break;
         case menu_album:
             top_row_text = "Album:";
-            bottom_row_text = control_ptr->get_menu_string();
+            bottom_row_text = control_ptr->get_text_to_display();
             transmit_to_LCD();
             break;
         case menu_track:
             top_row_text = "Song:";
-            bottom_row_text = control_ptr->get_menu_string();
+            bottom_row_text = control_ptr->get_text_to_display();
             transmit_to_LCD();
             break;
         case volume_menu:
