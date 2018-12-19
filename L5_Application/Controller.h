@@ -62,7 +62,7 @@ private:
     //    sem_view_update = outgoing signal to alert the view task to refresh
     //    sem_start_playback = outgoing signal to start the reader task
     //    sem_song_ended = incoming signal from reader task, saying song is finished play back
-    SemaphoreHandle_t* sem_hold, sem_view_update, sem_start_playback;
+    SemaphoreHandle_t* sem_hold, *sem_view_update, *sem_start_playback;
 
     enum {single_song, entire_album, all_songs_by_artist} playlist;
     bool playing_song, pause, stop_playback; //status flags
