@@ -250,17 +250,12 @@ void ButtonReaderTask(void * pvParameters)
 
 void View(void * pvParameters)
 {
-    std::cout << "in view" << std::endl;
     ViewController VC(ctrl);
-    std::cout << "Exit view constructor" << std::endl;
     while(1)
     {
         // Wait for signal from controller to update the view.
-        std::cout << "view wait for semaphore"<< std::endl;
         while(xSemaphoreTake(sem_view_update, portMAX_DELAY)!= pdTRUE);
-        std::cout << "before update view"<< std::endl;
-//        VC.update_view();
-        std::cout << "after update view"<< std::endl;
+        VC.update_view();
     }
 }
 

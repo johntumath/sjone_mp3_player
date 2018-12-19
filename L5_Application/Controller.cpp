@@ -123,10 +123,12 @@ void Controller::on_click(buttonList buttonStatus)
 void Controller::startup_click(buttonList buttonStatus)
 {
     std::cout << "Entering Startup Click" << std::endl;
+
+    xSemaphoreGive(*sem_view_update);
     // TODO Get vector using get_artist_list()
     // TODO Add splash
     // TODO Set the iterator to the top
-    std::cout << handler.get_artist_list()[0] << std::endl;
+//    std::cout << handler.get_artist_list()[0] << std::endl;
     view_state = menu_artist;
     // TODO Set menu_string to select the first artist in the vector
     // menu_string =
