@@ -25,14 +25,14 @@
 
 #include "command_handler.hpp"
 
-/// Handler for the MP3 volume control command
-CMD_HANDLER_FUNC(volumeHandler);
-
-/// Handler for the MP3 pause/resume command
-CMD_HANDLER_FUNC(pauseHandler);
-
-/// Handler for the MP3 play command
-CMD_HANDLER_FUNC(playHandler);
+///// Handler for the MP3 volume control command
+//CMD_HANDLER_FUNC(volumeHandler);
+//
+///// Handler for the MP3 pause/resume command
+//CMD_HANDLER_FUNC(pauseHandler);
+//
+///// Handler for the MP3 play command
+//CMD_HANDLER_FUNC(playHandler);
 
 /// Handler for task list & CPU Information
 CMD_HANDLER_FUNC(taskListHandler);
