@@ -10,13 +10,8 @@
 
 ViewController::ViewController(Controller* ctrl) : LCD(0xe4)
 {
-    top_row_text = "QUICK AND DIRTY";
-    bottom_row_text = "MP3 PLAYER";
-
     control_ptr = ctrl;
     current_view = startup;
-
-    transmit_to_LCD();
 }
 
 void ViewController::update_view(void)
